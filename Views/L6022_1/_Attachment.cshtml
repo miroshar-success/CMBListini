@@ -1,0 +1,407 @@
+﻿@using CMBListini.ViewModels;
+@model ViewModelL6022_1
+
+<div style="padding-left:10px">
+    <div class="form-row">
+        <!-- Sfiati Aria -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputSfiatiAriaID)
+            @Html.DropDownListFor(m => m.InputSfiatiAriaID, Model.ListSfiatiAria, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "SfiatiAriaID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputSfiatiAriaID, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Guarnizioni -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputGuarnizioniID)
+            @Html.DropDownListFor(m => m.InputGuarnizioniID, Model.ListGuarnizioni, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "GuarnizioneID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputGuarnizioniID, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Distanziali -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputDistanziali)
+            @Html.TextBoxFor(m => m.InputDistanziali, "{0:N0}", new { @Value = 0, @class = "form-control", @id = "Distanziali", @type = "number", onchange = "UpdateCode(),ResetTotals()", data_val_range = "Distanziali puo' avere un valore minimo di 0 e massimo di 9. In caso, contattare CMB." })
+            @Html.ValidationMessageFor(m => m.InputDistanziali, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Minimess -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputMinimessID)
+            @Html.DropDownListFor(m => m.InputMinimessID, Model.ListMinimess, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "MinimessID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputMinimessID, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- FilettaturaStelo -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputFilettaturaStelo)
+            @Html.DropDownListFor(m => m.InputFilettaturaStelo, Model.ListFilettaturaStelo, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "FilettaturaSteloID", onchange = "UpdateAccessoriStelo(),UpdateAccessoriCilindro(),UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputFilettaturaStelo, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- MaterialeStelo -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputMaterialeSteloID)
+            @Html.DropDownListFor(m => m.InputMaterialeSteloID, Model.ListMaterialeStelo, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "MaterialeSteloID", onchange = "UpdateCode()" })
+            @Html.ValidationMessageFor(m => m.InputMaterialeSteloID, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Stelo Prolungato -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputSteloProlungato)
+            <div class="input-group">
+                @Html.TextBoxFor(m => m.InputSteloProlungato, "{0:N0}", new { @class = "form-control", @id = "SteloProlungato", @type = "number", onchange = "UpdateCode()", data_val_range = "Stelo prolungato puo' avere un valore minimo di 0 e massimo di 2000. In caso, contattare CMB." })
+                <div class="input-group-append">
+                    <span class="input-group-text"> mm </span>
+                </div>
+            </div>
+            @Html.ValidationMessageFor(m => m.InputSteloProlungato, "", new { @class = "text-danger" })
+        </div>
+        <!-- Stelo Monolitico -->
+        <div class="form-group col-md-3">
+            <label for="">&#8195</label><br />
+            @Html.LabelFor(m => m.InputSteloMonolitico)
+            @Html.CheckBoxFor(m => m.InputSteloMonolitico, new { @id = "SteloMonolitico", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputSteloMonolitico, "", new { @class = "text-danger" })
+
+        </div>
+
+
+        <!-- Soffietto Stelo -->
+        <div class="form-group col-md-3">
+            <label for="">&#8195</label><br />
+            @Html.LabelFor(m => m.InputSoffiettoStelo)
+            @Html.CheckBoxFor(m => m.InputSoffiettoStelo, new { @id = "SoffiettoStelo", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputSoffiettoStelo, "", new { @class = "text-danger" })
+
+        </div>
+
+        <!-- MaterialeBoccola -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputMaterialeBoccolaID)
+            @Html.DropDownListFor(m => m.InputMaterialeBoccolaID, Model.ListMaterialeBoccola, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "MaterialeBoccolaID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputMaterialeBoccolaID, "", new { @class = "text-danger" })
+
+        </div>
+        <!--Drenaggio-->
+        <div class="form-group col-md-3">
+            <label for="">&#8195</label><br />
+            @Html.LabelFor(m => m.InputDrenaggio)
+            @Html.CheckBoxFor(m => m.InputDrenaggio, new { @id = "Drenaggio", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputDrenaggio, "", new { @class = "text-danger" })
+
+        </div>
+        <!--DadiIncassati-->
+        <div class="form-group col-md-3">
+            <label for="">&#8195</label><br />
+            @Html.LabelFor(m => m.InputDadiIncassati)
+            @Html.CheckBoxFor(m => m.InputDadiIncassati, new { @id = "DadiIncassati", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputDadiIncassati, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Connessioni Olio -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputConnessioniOlio)
+            @Html.DropDownListFor(m => m.InputConnessioniOlio, Model.ListConnessioniOlio, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "ConnessioniOlio", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputConnessioniOlio, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Numero Connessioni Olio -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputConnessioniOlioN)
+            @Html.TextBoxFor(m => m.InputConnessioniOlioN, "{0:N0}", new { @Value = 0, @class = "form-control", @id = "ConnessioniOlioN", @type = "number", onchange = "UpdateCode(),ResetTotals()", data_val_range = "Distanziali puo' avere un valore minimo di 0 e massimo di 4. In caso, contattare CMB." })
+            @Html.ValidationMessageFor(m => m.InputConnessioniOlioN, "", new { @class = "text-danger" })
+
+        </div>
+
+        <!-- Opzioni Cilindro -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputOpzioniCilindroID)
+            @Html.DropDownListFor(m => m.InputOpzioniCilindroID, Model.ListOpzioniCilindro, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "OpzioniCilindroID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputOpzioniCilindroID, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- PiastraCetop -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputPiastraCetopID)
+            @Html.DropDownListFor(m => m.InputPiastraCetopID, Model.ListPiastraCetop, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "PiastraCetopID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputPiastraCetopID, "", new { @class = "text-danger" })
+
+        </div>
+        <!--SnodoNonMantenuto-->
+        <div class="form-group col-md-3">
+            <label for="">&#8195</label><br />
+            @Html.LabelFor(m => m.InputSnodoNonMantenuto)
+            @Html.CheckBoxFor(m => m.InputSnodoNonMantenuto, new { @id = "SnodoNonMantenuto", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputSnodoNonMantenuto, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Controflangia -->
+        <div class="form-group col-md-3">
+            <label for="">&#8195</label><br />
+            @Html.LabelFor(m => m.InputControflangia)
+            @Html.CheckBoxFor(m => m.InputControflangia, new { @id = "Controflangia", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputControflangia, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Verniciatura -->
+        <div class="form-group col-md-3">
+            @Html.LabelFor(m => m.InputVerniciaturaID)
+            @Html.DropDownListFor(m => m.InputVerniciaturaID, Model.ListVerniciatura, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "VerniciaturaID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputVerniciaturaID, "", new { @class = "text-danger" })
+
+        </div>
+
+    </div>
+    <hr class="mt-1" />
+</div>
+
+<div class="form-row" style="padding-left:10px">
+
+    <!-- Sensori Induttivi -->
+    <div class="form-group col-md-3">
+        @Html.LabelFor(m => m.InputSensoriInduttiviID)
+        @Html.DropDownListFor(m => m.InputSensoriInduttiviID, Model.ListSensoriInduttivi, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "SensoriInduttiviID", onchange = "UpdateCode(),ResetTotals()" })
+        @Html.ValidationMessageFor(m => m.InputSensoriInduttiviID, "", new { @class = "text-danger" })
+
+    </div>
+    <!--ProtezioneSensore-->
+    <div class="form-group col-md-3">
+        <label for="">&#8195</label><br />
+        @Html.LabelFor(m => m.InputProtezioneSensore)
+        @Html.CheckBoxFor(m => m.InputProtezioneSensore, new { @id = "ProtezioneSensore", onchange = "UpdateCode(),ResetTotals()" })
+        @Html.ValidationMessageFor(m => m.InputProtezioneSensore, "", new { @class = "text-danger" })
+
+    </div>
+    <hr class="mt-1" />
+</div>
+<div class="form-row" style="padding-left:10px">
+
+    <!-- Trasduttore -->
+    <div class="form-group col-md-3">
+        @Html.LabelFor(m => m.InputTrasduttoreID)
+        @Html.DropDownListFor(m => m.InputTrasduttoreID, Model.ListTrasduttore, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", disabled = "true", data_width = "100%", @id = "TrasduttoreID", onchange = "UpdateCode(),ResetTotals()" })
+        @Html.ValidationMessageFor(m => m.InputTrasduttoreID, "", new { @class = "text-danger" })
+
+    </div>
+    <!-- Connettori Trasduttore -->
+    <div class="form-group col-md-3">
+        <label for="">&#8195</label><br />
+        @Html.LabelFor(m => m.InputConnettoriTrasduttore)
+        @Html.CheckBoxFor(m => m.InputConnettoriTrasduttore, new { @id = "ConnettoriTrasduttore", onchange = "UpdateCode(),ResetTotals()" })
+        @Html.ValidationMessageFor(m => m.InputConnettoriTrasduttore, "", new { @class = "text-danger" })
+
+    </div>
+    <!-- Protezione Trasduttore -->
+    <div class="form-group col-md-3">
+        <label for="">&#8195</label><br />
+        @Html.LabelFor(m => m.InputProtezioneTrasduttore)
+        @Html.CheckBoxFor(m => m.InputProtezioneTrasduttore, new { @id = "ProtezioneTrasduttore", onchange = "UpdateCode(),ResetTotals()" })
+        @Html.ValidationMessageFor(m => m.InputProtezioneTrasduttore, "", new { @class = "text-danger" })
+
+    </div>
+    <!-- Magneti-->
+    <div class="=form-group col-md-3">
+        @Html.LabelFor(m => m.InputMA3GA3)
+        @Html.TextBoxFor(m => m.InputMA3GA3, "{0:N0}", new { @value = 0, @class = "form-control", @id = "MA3GA3", Disabled = true, @type = "number", onchange = "UpdateCode(),ResetTotals()", data_val_range = "Sensore e Staffa puo' avere un valore minimo di 0 e massimo di 5. In caso, contattare CMB." })
+        @Html.ValidationMessageFor(m => m.InputMA3GA3, "", new { @class = "text-danger" })
+    </div>
+
+</div>
+
+
+<!--Accessori Stelo/Cilindro-->
+<hr class="mt-1" />
+<div class="form-row" style="padding-left:10px">
+    <!-- Stelo -->
+    <div class="form-group col-md-3">
+        @Html.LabelFor(m => m.InputAccessoriSteloID)
+        @Html.DropDownListFor(m => m.InputAccessoriSteloID, Model.ListAccessoriStelo, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "AccessoriSteloID", onchange = "UpdateCode(),ResetTotals()" })
+        @Html.ValidationMessageFor(m => m.InputAccessoriSteloID, "", new { @class = "text-danger" })
+
+    </div>
+    <!-- Cilindro -->
+    <div class="form-group col-md-3">
+        @Html.LabelFor(m => m.InputAccessoriCilindroID)
+        @Html.DropDownListFor(m => m.InputAccessoriCilindroID, Model.ListAccessoriCilindro, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @id = "AccessoriCilindroID", onchange = "UpdateCode(),ResetTotals()" })
+        @Html.ValidationMessageFor(m => m.InputAccessoriCilindroID, "", new { @class = "text-danger" })
+
+    </div>
+</div>
+
+<script>
+    //updatestelo
+    function UpdateAccessoriStelo() {
+        $.ajax(
+            {
+                dataType: "json",
+                type: "POST",
+                url: "@Url.Action("UpdateListAccessoriStelo", "L6022_1")",
+                data: {
+                    FilettaturaSteloID: $('#FilettaturaSteloID').val(),
+
+
+
+                },
+                success: function (result) {
+                    if (result.status == true) {
+                        var htmlContent = "\t<option value=''></option>\n";
+                        var categories = Object.keys(result.values);
+
+                        for (i = 0; i < categories.length; i++) {
+
+
+                            htmlContent += "\t<option value='" + categories[i] + "'> " + result.values[categories[i]] + " </option>\n";
+
+                        };
+
+
+                            $("#AccessoriSteloID").html(htmlContent);
+                            $("#AccessoriSteloID").selectpicker("refresh");
+
+                        $("#error").empty();
+                    } else {
+                        $("#error").html("Errore nella richiesta");
+                    }
+                }
+            });
+    }
+
+    //updatestelo
+    function UpdateAccessoriCilindro() {
+        $.ajax(
+            {
+                dataType: "json",
+                type: "POST",
+                url: "@Url.Action("UpdateListAccessoriCilindro", "L6022_1")",
+                data: {
+                    FilettaturaSteloID: $('#FilettaturaSteloID').val(),
+
+
+
+                },
+                success: function (result) {
+                    if (result.status == true) {
+                        var htmlContent = "\t<option value=''></option>\n";
+                        var categories = Object.keys(result.values);
+                        for (i = 0; i < categories.length; i++) {
+
+
+                            htmlContent += "\t<option value='" + categories[i] + "'> " + result.values[categories[i]] + " </option>\n";
+
+                        };
+
+
+                            $("#AccessoriCilindroID").html(htmlContent);
+                            $("#AccessoriCilindroID").selectpicker("refresh");
+
+                        $("#error").empty();
+                    } else {
+                        $("#error").html("Errore nella richiesta");
+                    }
+                }
+            });
+    }
+
+    //AttivazioneTrasduttore
+    function TransductorActivation() {
+        $.ajax(
+            {
+                dataType: "text",
+                type: "POST",
+                url: "@Url.Action("TransductorActivation", "L6022_1")",
+                data: {
+                    SerieID: $('#SerieID').val(),
+
+
+
+                },
+                success: function (result) {
+
+
+
+                    if (result == "True") {
+                        //$("#TrasduttoreID").removeAttr('disabled');
+                        $("#TrasduttoreID").attr('disabled', false);
+                        $("#TrasduttoreID").selectpicker("refresh");
+
+                    } else {
+                        $("#TrasduttoreID").attr('disabled', true);
+                        $("#TrasduttoreID").selectpicker("refresh");
+
+                    }
+
+                        $("#error").empty();
+
+                }
+            });
+    }
+
+    //Attivazione Magneti
+    function MagnetsActivation() {
+        $.ajax(
+            {
+                dataType: "text",
+                type: "POST",
+                url: "@Url.Action("MagnetsActivation", "L6022_1")",
+                data: {
+                    SerieID: $('#SerieID').val(),
+
+
+
+                },
+                success: function (result) {
+
+
+
+                    if (result == "True") {
+                        $("#MA3GA3").attr('disabled', false);
+                        //$("#MA3GA4").attr('disabled', false);
+
+                    } else {
+                        $("#MA3GA3").attr('disabled', true);
+                        //$("#MA3GA4").attr('disabled', true);
+
+                    }
+
+                        $("#error").empty();
+
+                }
+            });
+    }
+
+     //AttivazioneSfiati
+    function SfiatiActivation() {
+        $.ajax(
+            {
+                dataType: "text",
+                type: "POST",
+                url: "@Url.Action("ActivateSfiati", "L6022_1")",
+                data: {
+                    SerieID: $('#SerieID').val(),
+
+
+
+                },
+                success: function (result) {
+
+
+
+                    if (result != "0") {
+                        //$("#TrasduttoreID").removeAttr('disabled');
+                        $('#SfiatiAriaID').selectpicker('val', result);
+                        $("#SfiatiAriaID").selectpicker("refresh");
+                        
+                    } else {
+                        $('#SfiatiAriaID').selectpicker('val', 0);
+                        $("#SfiatiAriaID").selectpicker("refresh");
+
+                    }
+
+                        $("#error").empty();
+
+                }
+            });
+    }
+
+
+</script>

@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - CMB Cilindri</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <!-- Main title -->
+    <div class="container-fluid">
+        <div class="row d-flex align-items-center">
+            <div class="col-md-1 d-flex justify-content-center">
+                <a href="/Dashboard"><img src="~/Content/Res/logo.png" style="max-width:70px; height:auto;" /></a>
+            </div>
+            <div class="col-md-10">
+                <h1 class="pageTitle font-weight-light">Listini Commerciali</h1>
+            </div>
+        </div>
+        <hr />
+    </div>
+
+    <!-- RenderBody -->
+    <div class="container-fluid body-content">
+        @Scripts.Render("~/bundles/jquery")
+        @Scripts.Render("~/bundles/jqueryunob")
+        @Scripts.Render("~/bundles/jqueryval")
+        @Scripts.Render("~/bundles/popper")
+        @Scripts.Render("~/bundles/bootstrap")
+        @RenderSection("scripts", required: false)
+
+        <!-- Common script section -->
+        <script>
+            //For globalization (dot, comma) issues in client-side validation
+            $.validator.methods.range = function (value, element, param) {
+                var globalizedValue = value.replace(",", ".");
+                return this.optional(element) || (globalizedValue >= param[0] && globalizedValue <= param[1]);
+            }
+
+            $.validator.methods.number = function (value, element) {
+                return this.optional(element) || /^-?(?:\d+|\d{1,3}(?:[\s\.,]\d{3})+)(?:[\.,]\d+)?$/.test(value);
+            }
+        </script>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <!-- Username of current user -->
+                @if (ViewBag.Username != null)
+                {
+                    <span class="mb-5">Utente connesso: @ViewBag.Username</span>
+                    <br />
+                    <span class="mb-5">Azienda: @ViewBag.Organization</span>
+                }
+            </div>
+
+           
+
+
+            <div class="col-md-4  d-flex justify-content-center">
+                <!-- Loading -->
+                <span class="text-warning" id="loading" style="display:none">Aggiornamento...</span>
+            </div>
+
+            <div class="col-md-4 d-flex justify-content-end">
+                <!-- Error message -->
+                <span class="text-danger" id="error"></span>
+                <!-- Success messagge -->
+                <span class="text-success" id="success"></span>
+            </div>
+        </div>
+
+        @RenderBody()
+
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - Datamaze.it</p>
+        </footer>
+    </div>
+
+
+</body>
+</html>

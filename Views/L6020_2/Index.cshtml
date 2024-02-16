@@ -1,0 +1,311 @@
+﻿@using CMBListini.ViewModels;
+@model ViewModelL6020_2
+@{
+    ViewBag.Title = "Listino 6020/2";
+}
+
+<!-- Title -->
+<div class="row mb-1">
+    <div class="col-md-12">
+        <h2 class="font-weight-light pageTitle">@ViewBag.Title</h2>
+    </div>
+</div>
+<hr class="mt-1" />
+<style>
+    #notification {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+    }
+    #para {
+        border: 1px solid black;
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+
+    #ListingContainer {
+        height: 100%;
+        width: 100%;
+        font-size: 0;
+    }
+
+    #ListingBase, #ListingAttachments, #TotalButtons {
+        display: inline-block;
+        *display: inline;
+        zoom: 1;
+        vertical-align: top;
+        font-size: 12px;
+    }
+
+    #ListingBase {
+        width: 25%;
+        
+        
+    }
+
+    #ListingAttachments {
+        width: 50%;
+      
+    }
+
+    #TotalButtons {
+        width: 25%;
+        
+    }
+</style>
+
+<div style="text-align: center; z-index:2; background-color:white; position: sticky; top: 0;" ><div style="font-size: 10px;">Codice di Ordinazione:</div><div id="ArticleCode"><h2>-</h2></div></div>
+
+
+@using (Ajax.BeginForm("PriceCalc", "L6020_2", null, new AjaxOptions
+{
+    HttpMethod = "POST",
+    OnSuccess = "ajaxHeaderSubmitHandleSuccessResponse",
+    OnFailure = "ajaxHeaderSubmitHandleFailureResponse"
+}, new { @id = "L6020_2Form" }))
+{
+<div id="ListingContainer">
+    <div id="ListingBase">
+        @{ Html.RenderPartial("_Base", Model); }
+
+    </div>
+
+    <div id="ListingAttachments">
+        @{ Html.RenderPartial("_Attachment", Model); }
+        <hr class="mt-1" />
+      
+    </div>
+
+    <div id="TotalButtons" style="padding-left: 10px;">
+        <div class="form-row">
+            <!-- aggiungo bottone e textbox per la verifica del codice-->
+            <div class="form-group col-md-12">
+                
+                    @Html.TextBoxFor(m => m.Codiceimmesso, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Codiceimmesso, "", new { @class = "text-danger" })
+                
+            </div>
+
+            <div class="form-group col-md-12">
+                <input type="submit" value="Calcola" form="L6020_2Form" class="btn btn-info btn-block" />
+            </div>
+            <div class="form-group col-md-6">
+                <button onclick="CreateSendEmail()" class="btn btn-info btn-block">
+                    <i class="fas fa-envelope fas-lg"></i>
+                </button>
+            </div>
+            <div class="form-group col-md-6">
+                <a href="" target="download" onclick="CreateCSV()" class="btn btn-info btn-block">
+                    <i class="fas fa-file-csv fas-lg"></i>
+                </a>
+            </div>
+            <div class="form-group col-md-12">
+                <input type="button" value="Pulisci" onclick="ResetAllFields()" class="btn btn-info btn-block" />
+            </div>
+        </div>
+        <!--Discount-->
+        @{ Html.RenderPartial("_Discount", Model); }
+        <!--Fine Form-->
+        <!-- Error message -->
+        <div style="text-align:center">
+            <span class="text-danger" id="errorBottom"></span>
+        </div>
+        <hr class="mt-1" />
+        <div id="Listingtotals">
+            @{ Html.RenderPartial("_Total", Model); }
+        </div>
+        <hr class="mt-1" />
+    </div>
+</div>
+            }
+
+<!-- Pulsanti -->
+
+<!-- iframe -->
+<iframe name="download" style="position: absolute;width:0;height:0;border:0;"></iframe>
+
+
+<script>
+    function ResetTotals() {
+        $("#RollerGrossTotal").html('-');
+        $("#AttachmentGrossTotal").html('-');
+        $("#GrossTotal").html('-');
+        $("#TransducerTotal").html('-');
+        $("#FinalTotal").html('-');
+        $("#errorBottom").html('');
+
+
+    }
+    function ResetAllFields() {
+        $("#SerieID").selectpicker('val', 0);
+        $("#AlesaggioID").selectpicker('val', 0);
+        $("#SteloID").selectpicker('val', 0);
+        $("#TipoSteloID").selectpicker('val', 0);
+        $("#CorsaID").val(null);
+        $("#TipoFissaggioID").selectpicker('val', 0);
+        //opzionali
+        $('#Distanziali').val(0);
+        $('#SfiatiAriaID').selectpicker('val', 0);
+        $('#SensoriInduttiviID').selectpicker('val', 0);
+        $('#GuarnizioneID').selectpicker('val', 0);
+        $("#FilettaturaSteloID").selectpicker('val', 0);
+        $("#MaterialeBoccolaID").selectpicker('val', 0);
+
+        $('#Controflangia').prop("checked", false);
+        $('#SteloMonolitico').prop("checked", false);
+        $('#SoffiettoStelo').prop("checked", false);
+        $('#Drenaggio').prop("checked", false);
+        $('#SnodoNonMantenuto').prop("checked", false);
+        $('#DadiIncassati').prop("checked", false);
+        $('#MaterialeSteloID').selectpicker('val', 0);
+        $('#SteloProlungato').val(0);
+        $('#AccessoriSteloID').selectpicker('val', 0);
+        $('#AccessoriCilindroID').selectpicker('val', 0);
+        $('#MinimessID').selectpicker('val', 0);
+        $('#VerniciaturaID').selectpicker('val', 0);
+        $('#ProtezioneSensore').prop("checked", false);
+        $('#ConnettoriTrasduttore').prop("checked", false);
+        $('#ProtezioneTrasduttore').prop("checked", false);
+        $('#TrasduttoreID').selectpicker('val', 0);
+        $('#PiastraCetopID').selectpicker('val', 0);
+        $('#OpzioniCilindroID').selectpicker('val', 0);
+        $('#MA3GA3').val(0);
+        $('#MA3GA4').val(0);
+        $('#ExtraPrezzo').val(0);
+        $('#ConnessioniOlio').selectpicker('val', 0);
+        $('#ConnessioniOlioN').val(0);
+        //
+        //Aggiunte
+
+        //
+
+        //update total
+
+        $("#RollerGrossTotal").html('-');
+        $("#AttachmentGrossTotal").html('-');
+        $("#GrossTotal").html('-');
+        $("#TransducerTotal").html('-');
+        $("#FinalTotal").html('-');
+        $("#errorBottom").html('');
+
+
+        UpdateCode();
+    }
+
+    //due funzioni chiamate se success il calcolo o se fallisce
+
+    function ajaxHeaderSubmitHandleSuccessResponse(data) {
+        if (data.includes('-')) {
+            var ArrayTotal = data.split("-");
+            $("#RollerGrossTotal").html(ArrayTotal[0] + ' €');
+            $("#AttachmentGrossTotal").html(ArrayTotal[1] + ' €');
+            $("#GrossTotal").html(ArrayTotal[2] + ' €');
+            $("#TransducerTotal").html(ArrayTotal[3] + ' €');
+            $("#FinalTotal").html(ArrayTotal[4] + ' €');
+            $("#errorBottom").html('');
+
+            //aggiorno campi nascosti
+            $('#FinalTotalHidden').val(ArrayTotal[4]); //TotaleFinale
+            $('#CilindroTotalHidden').val(ArrayTotal[0]); //TotaleCilindro
+            $('#OpzioniTotalHidden').val(ArrayTotal[1]); //TotaleOpzioni
+            $('#TrasduttoreTotalHidden').val(ArrayTotal[3]); //TotaleTrasduttore
+            $('#GuarnizioniKitTotalHidden').val(ArrayTotal[2]); //TotaleKitGuarnizioni
+
+
+            //
+        } else {
+            $("#errorBottom").html(data);
+
+        }
+
+    }
+
+    function ajaxHeaderSubmitHandleFailureResponse(data, errStatus, errorThrown) {
+
+        $("#errorBottom").html("Errore generico nella richiesta");
+
+    }
+
+    function CreateSendEmail() {
+        //var form2 = jQuery('#L6020_2Form').serialize();
+        //alert(form2);
+        var form = document.getElementById('L6020_2Form');
+        var fd = new FormData(form);
+        $.ajax(
+            {
+                dataType: "text",
+                type: "POST",
+                url: "@Url.Action("CreateSendEmail", "L6020_2")",
+                data: fd,
+                cache: false,
+                contentType: false,
+                processData: false,
+                enctype: 'multipart/form-data',
+                success: function (result) {
+                    $('#notification').html('<button type="button" class="close" data-dismiss="alert">x</button>' + result);
+                    $("#notification").fadeTo(2000, 500).slideUp(500, function () {
+                        $("#notification").slideUp(500);
+                    });
+                    //$('#notification').toggleClass('hidden');
+                    //alert("funzione in fase di implementazione");
+
+                }
+            });
+    }
+
+
+    function CreateCSV() {
+        //var form2 = jQuery('#L6020_2Form').serialize();
+        //alert(form2);
+        var form = document.getElementById('L6020_2Form');
+        var fd = new FormData(form);
+        $.ajax(
+            {
+                type: "POST",
+                url: "@Url.Action("ExportCSV", "L6020_2")",
+                data: fd,
+                cache: false,
+                contentType: false,
+                processData: false,
+                enctype: 'multipart/form-data',
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function (result) {
+                    var a = document.createElement('a');
+                    var url = window.URL.createObjectURL(result);
+                    var code = $("#ArticleCodeHidden").val();
+                    var today = new Date();
+                    var dd = String(today.getDate()).padStart(2, '0');
+                    var mm = String(today.getMonth() + 1).padStart(2, '0'); //Gennaio 0
+                    var yyyy = today.getFullYear();
+
+                    today = yyyy + '' + mm + '' + dd;
+                    
+                    a.href = url;
+                    a.download = code + '_' + today + '.csv';
+                    document.body.append(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    //alert("funzione in fase di implementazione");
+                }
+            });
+    }
+
+    
+
+    $(document).ready(function () {
+        $("#notification").fadeTo(20, 10).slideUp(10, function () {
+            $("#notification").slideUp(10);
+        });
+    });
+
+</script>
+
+<!-- Popup Informativo -->
+
+    <div class="alert alert-info" id="notification">
+        
+    </div>

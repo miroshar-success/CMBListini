@@ -1,0 +1,79 @@
+﻿@{
+    ViewBag.Title = "Login";
+}
+
+<div class="row">
+    <div class="col-md-4">
+
+        <!-- Title -->
+        <div class="row mb-2">
+            <div class="col-md-12 mb-1">
+                <h2 class="font-weight-light pageTitle">@ViewBag.Title</h2>
+            </div>
+        </div>
+
+        <!-- Login form -->
+        @using (Html.BeginForm("PerformLogin", "Login", FormMethod.Post, new { @id = "loginForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+
+            @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+            <div class="form-group">
+                <label for="Username">Nome utente</label>
+                @Html.TextBox("username", "", new { @class = "form-control", @placeholder = "Nome utente" })
+            </div>
+
+            <div class="form-group">
+                <label for="Password">Password</label>
+                @Html.Password("password", "", new { @class = "form-control", @placeholder = "Password" })
+            </div>
+
+            <input type="submit" value="Login" class="btn btn-primary" style="margin-top:10px" />
+        }
+    </div>
+
+    <!-- Logo -->
+    <div class="col-md-8 d-flex align-items-center justify-content-center">
+        <img src="~/Content/Res/logo.png" style="height:auto;width: 50%;" />
+    </div>
+</div>
+
+<script>
+
+    $(document).ready(function () {
+        $("#loginForm").submit(function (e) {
+            e.preventDefault();
+
+            function getAntiForgeryToken() {
+                var token = '@Html.AntiForgeryToken()';
+                token = $(token).val();
+                return token;
+            }
+
+            //Check if login has been completed
+            $.ajax(
+            {
+                    dataType: 'json',
+                    type: "POST",
+                    url: '@Url.Action("PerformLogin", "Login")',
+                    data: {
+                        __RequestVerificationToken: getAntiForgeryToken(),
+                        username: $('#username').val(),
+                        password: $('#password').val()
+                    },
+                    success: function (result) {
+                        if (result.status == true) {
+                            window.location.href = '@Url.Action("Index", "Dashboard")';
+                        }
+                        else {
+                             $('#error').html("Errore: " + result.message)
+                        }
+                    }
+            });
+        });
+
+    });
+
+</script>

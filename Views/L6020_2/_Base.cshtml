@@ -1,0 +1,202 @@
+﻿@using CMBListini.ViewModels;
+@model ViewModelL6020_2
+
+<div>
+    
+    <div class="form-row" style="background-color:rgba(91,192,222,0.9);border-radius: 10px;">
+        <!-- hidden code for Form-->
+        @Html.TextBoxFor(m => m.InputCode, new { @id = "ArticleCodeHidden", value = "1", type = "hidden" })
+        @Html.TextBoxFor(m => m.CilindroTotal, new { @id = "CilindroTotalHidden", value = "1", type = "hidden" })
+        @Html.TextBoxFor(m => m.OpzioniTotal, new { @id = "OpzioniTotalHidden", value = "1", type = "hidden" })
+        @Html.TextBoxFor(m => m.TrasduttoreTotal, new { @id = "TrasduttoreTotalHidden", value = "1", type = "hidden" })
+        @Html.TextBoxFor(m => m.GuarnizioniKitTotal, new { @id = "GuarnizioniKitTotalHidden", value = "1", type = "hidden" })
+        @Html.TextBoxFor(m => m.FinalTotal, new { @id = "FinalTotalHidden", value = "1", type = "hidden" })
+
+        <!-- Serie -->
+        <div class="form-group col-md-12">
+            <b>@Html.LabelFor(m => m.InputSerieID)</b>
+            @Html.DropDownListFor(m => m.InputSerieID, Model.ListSerie, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @required = "true", @id = "SerieID", onchange = "ResetField(),UpdateAlesaggio(),UpdateStelo(),UpdateCode(),ResetTotals(),TransductorActivation(),MagnetsActivation(),SfiatiActivation()" })
+            @Html.ValidationMessageFor(m => m.InputSerieID, "", new { @class = "text-danger" })
+
+        </div>
+        <!-- Input Alesaggio -->
+        <div class="col-md-12">
+            <b>@Html.LabelFor(m => m.InputAlesaggioID)</b>
+            @Html.DropDownListFor(m => m.InputAlesaggioID, Model.ListAlesaggio, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @required = "true", @id = "AlesaggioID", onchange = "ResetStelo(),UpdateStelo(),UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputAlesaggioID, "", new { @class = "text-danger" })
+
+        </div>
+
+        <!-- Input Stelo -->
+        <div class="col-md-12">
+            <b>@Html.LabelFor(m => m.InputSteloID)</b>
+            @Html.DropDownListFor(m => m.InputSteloID, Model.ListStelo, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @required = "true", @id = "SteloID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputSteloID, "", new { @class = "text-danger" })
+        </div>
+
+        <!-- Corsa -->
+        <div class="form-group col-md-12">
+            <b> @Html.LabelFor(m => m.InputCorsa)</b>
+            <div class="input-group">
+                @Html.TextBoxFor(m => m.InputCorsa, "{0:N0}", new { @class = "form-control", @id = "CorsaID", @type = "number", onchange = "UpdateCode(),ResetTotals()", data_val_range = "Corsa puo' avere un valore minimo di 0 e massimo di 5000. In caso, contattare CMB." })
+                <div class="input-group-append">
+                    <span class="input-group-text"> mm </span>
+                </div>
+            </div>
+            @Html.ValidationMessageFor(m => m.InputCorsa, "", new { @class = "text-danger" })
+        </div>
+
+        <!-- Tipo Stelo -->
+        <div class="form-group col-md-12">
+            <b> @Html.LabelFor(m => m.InputTipoSteloID) </b>
+            @Html.DropDownListFor(m => m.InputTipoSteloID, Model.ListTipoStelo, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @required = "true", @id = "TipoSteloID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputTipoSteloID, "", new { @class = "text-danger" })
+        </div>
+
+        <!-- Tipo Fissaggio -->
+        <div class="form-group col-md-12" style="z-index: 3">
+            <b> @Html.LabelFor(m => m.InputTipoFissaggioID) </b>
+            @Html.DropDownListFor(m => m.InputTipoFissaggioID, Model.ListTipoFissaggio, new SelectListItem() { Text = "", Value = "", Disabled = true }.Text, new { @class = "selectpicker", data_live_search = "true", data_width = "100%", @required = "true", @id = "TipoFissaggioID", onchange = "UpdateCode(),ResetTotals()" })
+            @Html.ValidationMessageFor(m => m.InputTipoFissaggioID, "", new { @class = "text-danger" })
+        </div>
+
+    </div>
+
+
+</div>
+
+<script>
+    function ResetField() {
+        $("#AlesaggioID").selectpicker('val', 0);
+        $("#SteloID").selectpicker('val', 0);
+
+
+    }
+    function ResetStelo() {
+        $("#SteloID").selectpicker('val', 0);
+
+
+    }
+    function UpdateAlesaggio() {
+        $.ajax(
+            {
+                dataType: "json",
+                type: "POST",
+                url: "@Url.Action("UpdateListAlesaggio", "L6020_2")",
+                data: {
+                    InputSerieID: $('#SerieID').val()
+
+                },
+                success: function (result) {
+                    if (result.status == true) {
+                        var htmlContent = "";
+                        var categories = Object.keys(result.values);
+                        //alert(result.values[19]);
+
+                        //alert(result.values[categories[0]][1]);
+                        //Start adding option groups by manually inserting HTML
+                        for (i = 0; i < categories.length; i++) {
+
+
+                            htmlContent += "\t<option value='" + categories[i] + "'> " + result.values[categories[i]] + " mm </option>\n";
+
+                        };
+
+                        //htmlContent += "</optgroup>\n";
+
+
+                        $("#AlesaggioID").html(htmlContent);
+                        $("#AlesaggioID").selectpicker("refresh");
+                        $("#error").empty();
+                    } else {
+                        $("#error").html("Errore nella richiesta");
+                    }
+                }
+            });
+    }
+
+    //updatestelo
+    function UpdateStelo() {
+        $.ajax(
+            {
+                dataType: "json",
+                type: "POST",
+                url: "@Url.Action("UpdateListStelo", "L6020_2")",
+                data: {
+                    InputAlesaggioID: $('#AlesaggioID').val(),
+                    InputSerieID: $('#SerieID').val()
+
+                },
+                success: function (result) {
+                    if (result.status == true) {
+                        var htmlContent = "";
+                        var categories = Object.keys(result.values);
+                        for (i = 0; i < categories.length; i++) {
+
+
+                            htmlContent += "\t<option value='" + categories[i] + "'> " + result.values[categories[i]] + " </option>\n";
+
+                        };
+
+                        //htmlContent += "</optgroup>\n";
+
+
+                        $("#SteloID").html(htmlContent);
+                        $("#SteloID").selectpicker("refresh");
+                        $("#error").empty();
+                    } else {
+                        $("#error").html("Errore nella richiesta");
+                    }
+                }
+            });
+    }
+
+    //updatecode
+
+    function UpdateCode() {
+        $.ajax(
+            {
+                dataType: "text",
+                type: "POST",
+                url: "@Url.Action("UpdateCode", "L6020_2")",
+                data: {
+                    SerieID: $('#SerieID').val(),
+                    AlesaggioID: $('#AlesaggioID').val(),
+                    SteloID: $('#SteloID').val(),
+                    Corsa: $('#CorsaID').val(),
+                    TipoSteloID: $('#TipoSteloID').val(),
+                    TipoFissaggioID: $('#TipoFissaggioID').val(),
+                    Distanziali: $('#Distanziali').val(),
+                    SfiatiAriaID: $('#SfiatiAriaID').val(),
+                    SensoriInduttiviID: $('#SensoriInduttiviID').val(),
+                    GuarnizioneID: $('#GuarnizioneID').val(),
+                    Controflangia: $('#Controflangia').is(':checked'),
+                    SteloMonolitico: $('#SteloMonolitico').is(':checked'),
+                    Drenaggio: $('#Drenaggio').is(':checked'),
+                    SnodoNonMantenuto: $('#SnodoNonMantenuto').is(':checked'),
+                    DadiIncassati: $('#DadiIncassati').is(':checked'),
+                    MaterialeSteloID: $('#MaterialeSteloID').val(),
+                    SteloProlungato: $('#SteloProlungato').val(),
+                    SoffiettoStelo: $('#SoffiettoStelo').is(':checked'),
+                    FilettaturaSteloID: $('#FilettaturaSteloID').val(),
+                    MaterialeBoccolaID: $('#MaterialeBoccolaID').val(),
+                    MinimessID: $('#MinimessID').val(),
+                    OpzioniCilindroID: $('#OpzioniCilindroID').val(),
+                    ProtezioneSensore: $('#ProtezioneSensore').is(':checked'),
+                    ProtezioneTrasduttore: $('#ProtezioneTrasduttore').is(':checked'),
+                    ConnessioniOlio: $('#ConnessioniOlio').val()
+
+                },
+                success: function (result) {
+                        htmlContent = "<h2>" + result + "</h2>";
+                        $("#ArticleCode").html(htmlContent);
+                        $("#ArticleCodeHidden").val(result);
+                        $("#error").empty();
+                }
+            });
+            }
+
+    
+
+
+</script>

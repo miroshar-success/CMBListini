@@ -1,0 +1,48 @@
+﻿@using CMBListini.ViewModels;
+@model ViewModelL6020_2
+
+@{ string username = ViewBag.Username;
+
+
+}
+
+@if (Model.InputDiscount == "0")
+{
+    <hr class="mt-1" />
+    <div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            @Html.LabelFor(m => m.InputDiscount)
+            @Html.TextBoxFor(m => m.InputDiscount, new { @Value = 0, @class = "form-control", @id = "DiscountID", @type = "number", onchange= "ResetTotals()", data_val_range = "Massimo valore raggiunto" })
+            @Html.ValidationMessageFor(m => m.InputDiscount, "", new { @class = "text-danger" })
+
+        </div>
+        <div class="form-group col-md-6">
+            @Html.LabelFor(m => m.InputDiscountPlus)
+            @Html.TextBoxFor(m => m.InputDiscountPlus, new { @Value = 0, @class = "form-control", @id = "DiscountPlusID", @type = "number", onchange= "ResetTotals()", data_val_range = "Massimo valore raggiunto" })
+            @Html.ValidationMessageFor(m => m.InputDiscountPlus, "", new { @class = "text-danger" })
+
+        </div>
+        </div>
+        </div>
+        <hr class="mt-1" />
+        }
+        else
+        {
+        @Html.HiddenFor(x => x.InputDiscount);
+        @Html.HiddenFor(x => x.InputDiscountPlus);
+
+        }
+<div class="form-row">
+    <div class="form-group col-md-12">
+        @Html.LabelFor(m => m.inputExtraPrezzo)
+        @Html.TextBoxFor(m => m.inputExtraPrezzo, new { @Value = 0, @class = "form-control", @id = "ExtraPrezzo", @type = "number", onchange = "ResetTotals()"})
+        @Html.ValidationMessageFor(m => m.inputExtraPrezzo, "", new { @class = "text-danger" })
+
+    </div>
+</div>
+
+
+
+
+
