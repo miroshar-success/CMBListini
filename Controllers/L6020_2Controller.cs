@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
+using System.Security.Cryptography;
 using System.Text;
 using System.Web.Mvc;
+using System.Web.Services.Description;
 
 namespace CMBListini.Controllers
 {
@@ -33,8 +35,6 @@ namespace CMBListini.Controllers
         private ViewModelL6020_2 GetComponentsViewModelData()
         {
             ViewModelL6020_2 VM = new ViewModelL6020_2();
-
-
             L6202_2Calc quotation = new L6202_2Calc();
 
             using (CMBContext dbCtx = new CMBContext())
@@ -156,10 +156,64 @@ namespace CMBListini.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult ParseCode(string serie, string alesaggio, string stelo, string corsa, string tipoStelo, string tipoFissaggio)
+        {
+            using (CMBContext dbCtx = new CMBContext()) { 
+                var Serie = dbCtx.L6020_2Serie.Where(x => x.SerieisActive).Where(x => x.SerieID == serie).FirstOrDefault();
+                if (Serie == null) {
+                    return Content(JsonConvert.SerializeObject(new { status = false, message = "ID serie non valido > " + serie }));
+                }
+                var al = Decimal.Parse(alesaggio);
+                var Alesaggio = dbCtx.L6020_2Alesaggio.Where(x => x.AlesaggioisActive).Where(x => x.AlesaggioSerieID == Serie.SerieID).Where(x => x.AlesaggioLength == al).FirstOrDefault();
+                if (Alesaggio == null) {
+                    return Content(JsonConvert.SerializeObject(new { status = false, message = "Valore alesaggio non valido > " + alesaggio }));
+                }
+                var Stelo = dbCtx.L6020_2Stelo.Where(x => x.SteloisActive).Where(x => x.SteloAlesaggioID == Alesaggio.AlesaggioID).Where(x => x.SteloAcronym == stelo).FirstOrDefault();
+                if (Stelo == null) {
+                    return Content(JsonConvert.SerializeObject(new { status = false, message = "Acronym stelo non valido > " + stelo }));
+                }
+                var Corsa = Int32.Parse(corsa);
+                if (Corsa <= 0 || Corsa > 5000) {
+                    return Content(JsonConvert.SerializeObject(new { status = false, message = "Corsa puo' avere un valore minimo di 0 e massimo di 5000 > " + corsa }));
+                }
+                var TipoStelo = dbCtx.L6020_2TipoStelo.Where(x => x.isActive).Where(x => x.TipoSteloAcronym == tipoStelo).FirstOrDefault();
+                if (TipoStelo == null) {
+                    return Content(JsonConvert.SerializeObject(new { status = false, message = "Acronym tipo stelo non valido > " + tipoStelo }));
+                }
+                var TipoFissaggio = dbCtx.L6020_2TipoFissaggio.Where(x => x.isActive).Where(x => x.TipoFissaggioAcronym == tipoFissaggio).FirstOrDefault();
+                if (TipoFissaggio == null) {
+                    return Content(JsonConvert.SerializeObject(new { status = false, message = "Acronym tipo fissaggio non valido > " + tipoFissaggio }));
+                }
+                var Series = dbCtx.L6020_2Serie.Where(x => x.SerieisActive).ToList().Select(x => new { Value = x.SerieID, Text = x.SerieID + " - " + x.SerieDesc }).ToList();
+                var Alesaggios = dbCtx.L6020_2Alesaggio.Where(x => x.AlesaggioisActive).Where(x => x.AlesaggioSerieID == Serie.SerieID).ToList().Select(x => new { Value = x.AlesaggioID, Text = x.AlesaggioLength }).ToList();
+                var Stelos = dbCtx.L6020_2Stelo.Where(x => x.SteloisActive).Where(x => x.SteloAlesaggioID == Alesaggio.AlesaggioID).ToList().Select(x => new { Value = x.SteloID, Text = x.SteloAcronym + " - " + x.SteloDesc }).ToList();
+                var TipoStelos = dbCtx.L6020_2TipoStelo.Where(x => x.isActive).ToList().Select(x => new { Value = x.TipoSteloID, Text = x.TipoSteloAcronym + " - " + x.TipoSteloDesc }).ToList();
+                var TipoFissaggios = dbCtx.L6020_2TipoFissaggio.Where(x => x.isActive).ToList().Select(x => new { Value = x.TipoFissaggioID, Text = x.TipoFissaggioAcronym + " - " + x.TipoFissaggioDesc }).ToList();
+
+                return Content(JsonConvert.SerializeObject(new { 
+                    status = true,
+                    series = Series,
+                    alesaggios = Alesaggios,
+                    stelos = Stelos,
+                    tipoStelos = TipoStelos,
+                    tipoFissaggios = TipoFissaggios,
+
+                    serieID = Serie.SerieID,
+                    alesaggioID = Alesaggio.AlesaggioID,
+                    steloID = Stelo.SteloID,
+                    corsa = Corsa,
+                    tipoSteloID = TipoStelo.TipoSteloID,
+                    tipoFissaggioID = TipoFissaggio.TipoFissaggioID,
+                }));
+            }
+        }
+        
         //funzione aggiorna codice in schermata listino
         [HttpPost]
         public string UpdateCode(string ConnessioniOlio, string OpzioniCilindroID, string ProtezioneSensore, string SerieID, string AlesaggioID, string SteloID, string Corsa, string TipoSteloID, string TipoFissaggioID, string Distanziali, string SfiatiAriaID, string SensoriInduttiviID, string GuarnizioneID, string Controflangia, string SteloMonolitico, string MaterialeSteloID, string SteloProlungato, string SoffiettoStelo, string FilettaturaSteloID, string MaterialeBoccolaID, string Drenaggio, string SnodoNonMantenuto, string DadiIncassati, string MinimessID, string ProtezioneTrasduttore)
-        {   //rimpiazzo simboli strani in Corsa
+        {   
+            //rimpiazzo simboli strani in Corsa
             Corsa = Corsa.Replace(".", "");
 
 
@@ -364,17 +418,8 @@ namespace CMBListini.Controllers
 
                 }
 
-
             }
             //
-
-
-
-
-
-
-
-
             return ActualCode;
 
         }
