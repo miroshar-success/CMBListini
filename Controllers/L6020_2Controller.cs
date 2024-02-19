@@ -193,18 +193,18 @@ namespace CMBListini.Controllers
 
                 return Content(JsonConvert.SerializeObject(new { 
                     status = true,
-                    series = Series,
-                    alesaggios = Alesaggios,
-                    stelos = Stelos,
-                    tipoStelos = TipoStelos,
-                    tipoFissaggios = TipoFissaggios,
+                    Series = Series,
+                    Alesaggios = Alesaggios,
+                    Stelos = Stelos,
+                    TipoStelos = TipoStelos,
+                    TipoFissaggios = TipoFissaggios,
 
-                    serieID = Serie.SerieID,
-                    alesaggioID = Alesaggio.AlesaggioID,
-                    steloID = Stelo.SteloID,
-                    corsa = Corsa,
-                    tipoSteloID = TipoStelo.TipoSteloID,
-                    tipoFissaggioID = TipoFissaggio.TipoFissaggioID,
+                    SerieID = Serie.SerieID,
+                    AlesaggioID = Alesaggio.AlesaggioID,
+                    SteloID = Stelo.SteloID,
+                    Corsa = Corsa,
+                    TipoSteloID = TipoStelo.TipoSteloID,
+                    TipoFissaggioID = TipoFissaggio.TipoFissaggioID,
                 }));
             }
         }
