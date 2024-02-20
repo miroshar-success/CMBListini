@@ -14,6 +14,7 @@
 <style>
     #notification {
         position: fixed;
+        position: fixed;
         bottom: 0;
         right: 0;
     }
@@ -40,22 +41,23 @@
 
     #ListingBase {
         width: 25%;
-        
-        
     }
 
     #ListingAttachments {
         width: 50%;
-      
     }
 
     #TotalButtons {
         width: 25%;
-        
     }
 </style>
 
-<div style="text-align: center; z-index:2; background-color:white; position: sticky; top: 0;" ><div style="font-size: 10px;">Codice di Ordinazione:</div><div id="ArticleCode"><h2>-</h2></div></div>
+<div style="text-align: center; z-index:2; background-color:white; position: sticky; top: 0;">
+    <div style="font-size: 10px;">Codice di Ordinazione:</div>
+    <div id="ArticleCode">
+        <h2>-</h2>
+    </div>
+</div>
 
 
 @using (Ajax.BeginForm("PriceCalc", "L6022_1", null, new AjaxOptions
@@ -65,53 +67,55 @@
     OnFailure = "ajaxHeaderSubmitHandleFailureResponse"
 }, new { @id = "L6022_1Form" }))
 {
-<div id="ListingContainer">
-    <div id="ListingBase">
-        @{ Html.RenderPartial("_Base", Model); }
-
-    </div>
-
-    <div id="ListingAttachments">
-        @{ Html.RenderPartial("_Attachment", Model); }
-        <hr class="mt-1" />
-      
-    </div>
-
-    <div id="TotalButtons" style="padding-left: 10px;">
-        <div class="form-row">
-            <div class="form-group col-md-12">
-                <input type="submit" value="Calcola" form="L6020_2Form" class="btn btn-info btn-block" />
-            </div>
-            <div class="form-group col-md-6">
-                <button onclick="CreateSendEmail()" class="btn btn-info btn-block">
-                    <i class="fas fa-envelope fas-lg"></i>
-                </button>
-            </div>
-            <div class="form-group col-md-6">
-                <a href="" target="download" onclick="CreateCSV()" class="btn btn-info btn-block">
-                    <i class="fas fa-file-csv fas-lg"></i>
-                </a>
-            </div>
-            <div class="form-group col-md-12">
-                <input type="button" value="Pulisci" onclick="ResetAllFields()" class="btn btn-info btn-block" />
-            </div>
+    <div id="ListingContainer">
+        <div id="ListingBase">
+            @{ Html.RenderPartial("_Base", Model); }
         </div>
-        <!--Discount-->
-        @{ Html.RenderPartial("_Discount", Model); }
-        <!--Fine Form-->
-        <!-- Error message -->
-        <div style="text-align:center">
-            <span class="text-danger" id="errorBottom"></span>
+        <div id="ListingAttachments">
+            @{ Html.RenderPartial("_Attachment", Model); }
+            <hr class="mt-1" />
         </div>
-        <hr class="mt-1" />
-        <div id="Listingtotals">
-            @{ Html.RenderPartial("_Total", Model); }
+        <div id="TotalButtons" style="padding-left: 10px;">
+            <div class="form-row">
+                <!-- aggiungo bottone e textbox per la verifica del codice-->
+                <div class="form-group col-md-12">
+                    @Html.TextBoxFor(m => m.Codiceimmesso, new { @class = "form-control", @placeholder = "Inserire il codice e premere invio" })
+                    @Html.ValidationMessageFor(m => m.Codiceimmesso, "", new { @class = "text-danger" })
+                    <span id="Codiceimmesso-error" class="text-danger d-none">formato del codice non valido (controlla l'esempio)</span>
+                    <p>e.g: A3025A0012E[xz]30 (A3: Serie, 025: Alesaggio, A: Stelo, 0012: Corsa, E: Tipo Stelo, [xz]: [ignore], 30: Tipo Fissaggio)</p>
+                </div>
+                <div class="form-group col-md-12">
+                    <input type="submit" value="Calcola" form="L6022_1Form" class="btn btn-info btn-block" />
+                </div>
+                <div class="form-group col-md-6">
+                    <button onclick="CreateSendEmail()" class="btn btn-info btn-block">
+                        <i class="fas fa-envelope fas-lg"></i>
+                    </button>
+                </div>
+                <div class="form-group col-md-6">
+                    <a href="" target="download" onclick="CreateCSV()" class="btn btn-info btn-block">
+                        <i class="fas fa-file-csv fas-lg"></i>
+                    </a>
+                </div>
+                <div class="form-group col-md-12">
+                    <input type="button" value="Pulisci" onclick="ResetAllFields()" class="btn btn-info btn-block" />
+                </div>
+            </div>
+            <!--Discount-->
+            @{ Html.RenderPartial("_Discount", Model); }
+            <!--Fine Form-->
+            <!-- Error message -->
+            <div style="text-align:center">
+                <span class="text-danger" id="errorBottom"></span>
+            </div>
+            <hr class="mt-1" />
+            <div id="Listingtotals">
+                @{ Html.RenderPartial("_Total", Model); }
+            </div>
+            <hr class="mt-1" />
         </div>
-        <hr class="mt-1" />
     </div>
-</div>
-            }
-
+}
 <!-- Pulsanti -->
 
 <!-- iframe -->
@@ -291,6 +295,68 @@
     $(document).ready(function () {
         $("#notification").fadeTo(20, 10).slideUp(10, function () {
             $("#notification").slideUp(10);
+        });
+
+        function checkCodeValid(code) {
+            var b = /^\w{2}\d{3}[a-zA-Z]\d{4}[a-zA-Z][w-z]{0,2}\d{2}/.test(code);
+            if (b) {
+                $('#Codiceimmesso-error').addClass("d-none")
+            } else {
+                $('#Codiceimmesso-error').html("formato del codice non valido (controlla l'esempio)")
+                $('#Codiceimmesso-error').removeClass("d-none")
+            }
+            return b;
+        }
+
+        $('#Codiceimmesso').on("keydown", function(e) {
+            e.stopPropagation();
+            var code = $(this).val();
+            if (e.keyCode != 13) {
+                return;
+            }
+            e.preventDefault();
+            if (!checkCodeValid(code)) {
+                return;
+            }
+            var data = /^(\w{2})(\d{3})([a-zA-Z])(\d{4})([a-zA-Z])([w-z]{0,2})(\d{2})/.exec(code);
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("ParseCode", "L6020_2")",
+                data: {
+                    serie:         data[1],
+                    alesaggio:     data[2],
+                    stelo:         data[3],
+                    corsa:         data[4],
+                    tipoStelo:     data[5],
+                    tipoFissaggio: data[7]
+                },
+                dateType: "JSON",
+                success: function (result) {
+                    result = JSON.parse(result);
+                    if (!result.status) {
+                        $('#Codiceimmesso-error').html(result.message)
+                        $('#Codiceimmesso-error').removeClass("d-none")
+                        return;
+                    }
+                    ["Serie", "Alesaggio", "Stelo", "TipoStelo", "TipoFissaggio"].map((cls) => {
+                        $("#" + cls + "ID").html(
+                            result[cls + "s"].map((ele) =>
+                                [
+                                    '<option value="', ele.Value, '" ', (result[cls + "ID"] == ele.Value ? "selected" : ""), '>', 
+                                    ele.Text, 
+                                    cls == "Alesaggio" ? " mm" : '',
+                                    '</option>'
+                                ].join('')
+                            ).join('')
+                        );
+                        $("#" + cls + "ID").selectpicker("refresh");
+                    });
+                    $('#CorsaID').val(result.Corsa);
+
+                    UpdateCode();
+                    $('#L6022_1Form').submit();
+                }
+            });
         });
     });
 

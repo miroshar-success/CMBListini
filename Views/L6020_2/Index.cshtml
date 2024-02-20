@@ -277,7 +277,7 @@
         });
 
         function checkCodeValid(code) {
-            var b = /^\w{2}\d{3}[a-zA-Z]\d{4}[a-zA-Z][w-z]{0,2}\d{2}/g.test(code);
+            var b = /^\w{2}\d{3}[a-zA-Z]\d{4}[a-zA-Z][w-z]{0,2}\d{2}/.test(code);
             if (b) {
                 $('#Codiceimmesso-error').addClass("d-none")
             } else {

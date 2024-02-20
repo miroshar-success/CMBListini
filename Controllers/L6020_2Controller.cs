@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web.Mvc;
 using System.Web.Services.Description;
 
@@ -19,7 +20,6 @@ namespace CMBListini.Controllers
         // GET: L6020_2
         public ActionResult Index()
         {
-
             ViewBag.Username = Session["username"];
             ViewBag.Organization = Session["Organization"];
             try
@@ -36,25 +36,50 @@ namespace CMBListini.Controllers
         {
             ViewModelL6020_2 VM = new ViewModelL6020_2();
             L6202_2Calc quotation = new L6202_2Calc();
-
             using (CMBContext dbCtx = new CMBContext())
             {
-                //Discount
+                // Discount
                 string Organization = (string)Session["Organization"];
                 var OrganizationData = dbCtx.Organizations.Where(x => x.OrganizationName == Organization).First();
                 string StringDiscount = OrganizationData.OrganizationDiscount ?? "0+0";
-                if (!StringDiscount.Contains("+"))
-                {
-                    StringDiscount += "+0";
+
+                Regex rg = new Regex(@"^\d+\+\d+$");
+                if (!rg.IsMatch(StringDiscount)) {
+                    StringDiscount = "0+0";
                 }
-                string Discount = StringDiscount;
-                string[] subs = Discount.Split('+');
-                //
-                VM = new L6202_2Calc().ToViewModel(Int32.Parse(subs[0]), Int32.Parse(subs[1]));
+
+                string[] orgDiscountsubs = StringDiscount.Split('+');
+                bool customDiscountEnable = false;
+                int customDiscount = 0;
+                int customExtraDiscount = 0;
+                bool customDiscountMod = false;
+                if (StringDiscount == "0+0") {
+                    var CustomDis = dbCtx.Users.SqlQuery("SELECT * " +
+                        "FROM dbo.Users " +
+                        "WHERE DISCOUNTMODIFY_START <= GETDATE() AND DISCOUNTMODIFY_STOP >= GETDATE() " +
+                        "AND DISCOUNTMOD IS NOT NULL AND DISCOUNT IS NOT NULL AND DISCOUNT > 0 AND DISCOUNT <= 100 " +
+                        "AND DISCOUNTEXTRA IS NOT NULL ANd DISCOUNTEXTRA > 0 and DISCOUNTEXTRA <= 100 " +
+                        "AND UserId = '" + (string)Session["UserName"] + "'")
+                        .FirstOrDefault();
+                    if (CustomDis != null)
+                    {
+                        customDiscountEnable = true;
+                        customDiscount = (int)CustomDis.DISCOUNT;
+                        customExtraDiscount = (int)CustomDis.DISCOUNTEXTRA;
+                        customDiscountMod = CustomDis.DISCOUNTMOD == true;
+                    }
+                }
+                
+                VM = new L6202_2Calc().ToViewModel(
+                    Int32.Parse(orgDiscountsubs[0]), 
+                    Int32.Parse(orgDiscountsubs[1]),
+                    customDiscountEnable,
+                    customDiscountMod,
+                    customDiscount,
+                    customExtraDiscount
+                );
                 VM.OrganizationData = dbCtx.Organizations.Where(x => x.OrganizationName == Organization).First();
-
             }
-
             return VM;
         }
 
@@ -78,7 +103,6 @@ namespace CMBListini.Controllers
             }
             else
             {
-
                 return false;
             }
         }
@@ -87,22 +111,18 @@ namespace CMBListini.Controllers
         public ActionResult UpdateListAlesaggio(string InputSerieID)
         {
             Dictionary<string, string> articlesByCategory = new Dictionary<string, string>();
-
             try
             {
                 using (CMBContext dbCtx = new CMBContext())
                 {
                     var articleCategories = dbCtx.L6020_2Alesaggio.Where(c => c.AlesaggioSerieID == InputSerieID).OrderBy(c => c.AlesaggioLength).ToArray();
-
                     //Extract all articles matching a specific category
                     foreach (L6020_2Alesaggio category in articleCategories)
                     {
                         //L6020_2Alesaggio[] articlesBySelectedCategory = dbCtx.L6020_2Alesaggio.Where(a =>  == category.ArticleCategoryID && a.InUse).ToArray();
-
                         articlesByCategory.Add(category.AlesaggioID.ToString(), Convert.ToInt32(category.AlesaggioLength).ToString());
                     }
                 }
-
                 return Content(JsonConvert.SerializeObject(new { status = true, values = articlesByCategory }));
             }
 
@@ -116,7 +136,6 @@ namespace CMBListini.Controllers
         [HttpPost]
         public ActionResult UpdateListStelo(string InputAlesaggioID, string InputSerieID)
         {
-
             Dictionary<string, string> articlesByCategory = new Dictionary<string, string>();
             int IntAlesaggioID = 1;
             try
@@ -124,7 +143,6 @@ namespace CMBListini.Controllers
                 using (CMBContext dbCtx = new CMBContext())
                 {
                     var articleCategories = dbCtx.L6020_2Stelo.Where(c => c.SteloAlesaggioID == 1).OrderBy(c => c.SteloValue).ToArray();
-
                     if (InputAlesaggioID != "")
                     {
                         IntAlesaggioID = Int32.Parse(InputAlesaggioID);
@@ -136,7 +154,6 @@ namespace CMBListini.Controllers
                         //prendo alesaggi ID della serie
                         var AlesaggioCategory = dbCtx.L6020_2Alesaggio.Where(c => c.AlesaggioSerieID == InputSerieID).FirstOrDefault();
                         articleCategories = dbCtx.L6020_2Stelo.Where(c => c.SteloAlesaggioID == AlesaggioCategory.AlesaggioID).OrderBy(c => c.SteloValue).ToArray();
-
                     }
 
                     //Extract all articles matching a specific category
@@ -146,10 +163,8 @@ namespace CMBListini.Controllers
                         articlesByCategory.Add(category.SteloID.ToString(), category.SteloAcronym + " - " + category.SteloDesc.ToString());
                     }
                 }
-
                 return Content(JsonConvert.SerializeObject(new { status = true, values = articlesByCategory }));
             }
-
             catch (Exception ex)
             {
                 return Content(JsonConvert.SerializeObject(new { status = false, message = ex.Message }));
@@ -215,11 +230,8 @@ namespace CMBListini.Controllers
         {   
             //rimpiazzo simboli strani in Corsa
             Corsa = Corsa.Replace(".", "");
-
-
             string ActualCode = "";
             int IntAlesaggio = 0;
-
             //SERIE
             if (SerieID != "" && SerieID != null)
             {
@@ -260,7 +272,6 @@ namespace CMBListini.Controllers
                     {
                         if (AlesaggioID == "")
                         {
-
                             var AlesaggioCategory = dbCtx.L6020_2Alesaggio.Where(c => c.AlesaggioSerieID == SerieID).FirstOrDefault();
                             SteloCode = dbCtx.L6020_2Stelo.Where(c => c.SteloAlesaggioID == AlesaggioCategory.AlesaggioID).FirstOrDefault();
 
@@ -290,7 +301,6 @@ namespace CMBListini.Controllers
                     CAddition = CAddition.Substring(0, 4);
                 }
                 ActualCode += CAddition;
-
             }
 
             //TIPOSTELO
@@ -301,36 +311,24 @@ namespace CMBListini.Controllers
                     int IntTipoStelo = Int32.Parse(TipoSteloID);
                     var TipoSteloCategory = dbCtx.L6020_2TipoStelo.Where(c => c.TipoSteloID == IntTipoStelo).FirstOrDefault();
                     ActualCode += TipoSteloCategory.TipoSteloAcronym;
-
                 }
-
             }
 
             //x,y,w CHECK
             if (FilettaturaSteloID != "")
             {
-
                 using (CMBContext dbCtx = new CMBContext())
                 {
                     int IntFilettaturaSteloID = Int32.Parse(FilettaturaSteloID);
                     var TipoFilettaturaStelo = dbCtx.L6020_2FilettaturaStelo.Where(c => c.FilettaturaSteloID == IntFilettaturaSteloID).FirstOrDefault();
                     ActualCode += TipoFilettaturaStelo.FilettaturaSteloAcronym;
-
                 }
-
-
-
             }
             //z CHECK
             if (ConnessioniOlio != "" || OpzioniCilindroID != "" || ProtezioneTrasduttore == "true" || ProtezioneSensore == "true" || MinimessID != "" || DadiIncassati == "true" || SnodoNonMantenuto == "true" || Drenaggio == "true" || Controflangia == "true" || SteloMonolitico == "true" || MaterialeSteloID != "" || SteloProlungato != "0" || SoffiettoStelo == "true" || MaterialeBoccolaID != "")
             {
                 ActualCode += "z";
-
             }
-
-
-            //
-
 
             //TIPOFISSAGGIO
             if (TipoFissaggioID != null && TipoFissaggioID != "")
@@ -340,11 +338,9 @@ namespace CMBListini.Controllers
                     int IntTipoFissaggio = Int32.Parse(TipoFissaggioID);
                     var TipoFissaggioCategory = dbCtx.L6020_2TipoFissaggio.Where(c => c.TipoFissaggioID == IntTipoFissaggio).FirstOrDefault();
                     ActualCode += TipoFissaggioCategory.TipoFissaggioAcronym;
-
                 }
 
             }
-
             //PARTE DI CODICE OPZIONALE
             //Posizione sensori induttivi
             //
@@ -363,7 +359,6 @@ namespace CMBListini.Controllers
                 }
                 ActualCode += Distanziali;
             }
-            //
             //Sfiati aria
             if (SfiatiAriaID != null && SfiatiAriaID != "")
             {
@@ -371,16 +366,12 @@ namespace CMBListini.Controllers
                 {
                     ActualCode += " / ";
                 }
-
                 using (CMBContext dbCtx = new CMBContext())
                 {
                     int IntSfiatiAriaID = Int32.Parse(SfiatiAriaID);
                     var SfiatiAriaCategory = dbCtx.L6020_2SfiatiAria.Where(c => c.SfiatiAriaID == IntSfiatiAriaID).FirstOrDefault();
                     ActualCode += SfiatiAriaCategory.SfiatiAriaAcronym;
-
                 }
-
-
             }
             //
             //Guarnizioni
@@ -390,18 +381,13 @@ namespace CMBListini.Controllers
                 {
                     ActualCode += " / ";
                 }
-
                 using (CMBContext dbCtx = new CMBContext())
                 {
                     int IntGuarnizioneID = Int32.Parse(GuarnizioneID);
                     var GuarnizioneCategory = dbCtx.L6020_2Guarnizione.Where(c => c.GuarnizioneID == IntGuarnizioneID).FirstOrDefault();
                     ActualCode += GuarnizioneCategory.GuarnizioneAcronym;
-
                 }
-
-
             }
-            //
             //Sensori induttivi
             if (SensoriInduttiviID != null && SensoriInduttiviID != "")
             {
@@ -409,19 +395,14 @@ namespace CMBListini.Controllers
                 {
                     ActualCode += " / ";
                 }
-
                 using (CMBContext dbCtx = new CMBContext())
                 {
                     int IntSensoriInduttiviID = Int32.Parse(SensoriInduttiviID);
                     var SensoriInduttiviCategory = dbCtx.L6020_2SensoriInduttivi.Where(c => c.SensoriInduttiviID == IntSensoriInduttiviID).FirstOrDefault();
                     ActualCode += SensoriInduttiviCategory.SensoriInduttiviAcronym;
-
                 }
-
             }
-            //
             return ActualCode;
-
         }
 
         [HttpPost]
@@ -435,16 +416,14 @@ namespace CMBListini.Controllers
             decimal GrossTotal = 0;
             decimal TransducerTotal = 0;
             decimal FinalTotal = 0;
-
-
+            
             //Discount
-            decimal InputDiscount = Int32.Parse(FormData.InputDiscount);
-            decimal InputDiscountPlus = Int32.Parse(FormData.InputDiscountPlus);
-
-            //
+            decimal InputDiscount = Int32.Parse(FormData.InputDiscount == null ? "0" : FormData.InputDiscount);
+            decimal InputDiscountPlus = Int32.Parse(FormData.InputDiscountPlus == null ? "0" : FormData.InputDiscountPlus);
+            
             //ExtraPrezzo
             decimal InputExtraPrezzo = FormData.inputExtraPrezzo;
-            //
+            
             //Base
             decimal BasePriceTotal = 0;
             decimal BaseRun = 0;
@@ -478,7 +457,6 @@ namespace CMBListini.Controllers
             //SensoreStaffa //MA3GA3
             int InputMA3GA3 = FormData.InputMA3GA3;
             decimal MA3GA3Price = 0;
-
 
             //Distanziali
             int Distanziali = Int32.Parse(FormData.InputDistanziali);
@@ -546,57 +524,42 @@ namespace CMBListini.Controllers
             Boolean InputSnodoNonMantenuto = FormData.InputSnodoNonMantenuto;
             decimal SnodoNonMantenutoPrice = 0;
 
-            //
-
             //Minimess
             int InputMinimessID = Int32.Parse(FormData.InputMinimessID ?? "0");
             decimal MinimessPrice = 0;
-            //
 
             //ProtezioneSensore
             Boolean InputProtezioneSensore = FormData.InputProtezioneSensore;
             decimal ProtezioneSensorePrice = 0;
-            //
 
             //Verniciatura
             int InputVerniciatura = Int32.Parse(FormData.InputVerniciaturaID ?? "0");
             decimal VerniciaturaPrice = 0;
-            //
 
             //Ammortizzatori (Basarsi su tipo stelo)
             decimal AmmortizzatoriPrice = 0;
-            //
 
             //PiastraCetop
             int InputPiastraCetop = Int32.Parse(FormData.InputPiastraCetopID ?? "0");
             decimal PiastraCetopPrice = 0;
 
-            //
-
             //FilettaturaStelo
             int InputFilettaturaSteloID = Int32.Parse(FormData.InputFilettaturaStelo ?? "0");
             decimal FilettaturaSteloPrice = 0;
-
-            //
 
             //ProtezioneTrasduttore
             Boolean InputProtezioneTrasduttore = FormData.InputProtezioneTrasduttore;
             decimal ProtezioneTrasduttorePrice = 0;
 
-            //
-
             //OpzioniCilindro
             int InputOpzioniCilindro = Int32.Parse(FormData.InputOpzioniCilindroID ?? "0");
             decimal OpzioniCilindroPrice = 0;
-
-            //
 
             //Accessori Stelo/Cilindro
             int InputAccessoriStelo = Int32.Parse(FormData.InputAccessoriSteloID ?? "0");
             int InputAccessoriCilindro = Int32.Parse(FormData.InputAccessoriCilindroID ?? "0");
             decimal AccessoriSteloPrice = 0;
             decimal AccessoriCilindroPrice = 0;
-            //
 
             //calcoli
             using (CMBContext dbCtx = new CMBContext())
@@ -609,13 +572,11 @@ namespace CMBListini.Controllers
                 L6020_2Stelo FormStelo = dbCtx.L6020_2Stelo.Where(x => x.SteloID == InputSteloID).First();
                 L6020_2TipoStelo FormTipoStelo = dbCtx.L6020_2TipoStelo.Where(x => x.TipoSteloID == InputTipoSteloID).First();
                 L6020_2Serie FormSerie = dbCtx.L6020_2Serie.Where(x => x.SerieID == FormData.InputSerieID).First();
-
                 L6020_2TipoFissaggio FormTipoFissaggio = dbCtx.L6020_2TipoFissaggio.Where(x => x.TipoFissaggioID == InputTipoFissaggio).First();
                 L6020_2FissaggioPrice FormFissaggioPrice = dbCtx.L6020_2FissaggioPrice.Where(x => x.FissaggioPriceCategoryID == FormTipoFissaggio.FissaggioPriceCategoryID && x.FissaggioAlesaggioLength == FormAlesaggio.AlesaggioLength).First();
                 L6020_2FissaggioPriceCategory FormFissaggioPriceCategory = dbCtx.L6020_2FissaggioPriceCategory.Where(x => x.FissaggioPriceCategoryID == FormTipoFissaggio.FissaggioPriceCategoryID).First();
                 //datasets opzionali sono popolati negli appositi contesti
 
-                //
                 //Calcolo prezzo base basato su Corsa
                 //Prendo costo della Base
                 L6020_2Base FormBase = dbCtx.L6020_2Base.Where(x => x.BaseInox == FormSerie.SerieInox && x.BaseStP == FormTipoStelo.TipoSteloPassante && x.AlesaggioLength == FormAlesaggio.AlesaggioLength && x.SteloValue == FormStelo.SteloValue).First();
@@ -630,9 +591,7 @@ namespace CMBListini.Controllers
                     BaseRunAfter += FormBase.BeyondRunPrice;
                     Corsa -= FormBase.LimitLength;
                 }
-
                 BasePriceTotal = BaseRun + BaseRunAfter;
-
                 //Fine prezzo Base
 
                 //calcolo Base Std
@@ -650,8 +609,6 @@ namespace CMBListini.Controllers
                 }
                 BasePriceTotalStd = BaseRunStd + BaseRunAfterStd;
 
-                //
-
                 //Fissaggi
                 if (FormFissaggioPriceCategory.isStandard != true)
                 {
@@ -665,15 +622,12 @@ namespace CMBListini.Controllers
                     }
                 }
                 //Fine Fissaggi
-
                 //PredisposizioneTrasduttore
                 if (FormSerie.SerieTransducer == true)
                 {
                     PredisposizioneTrasduttorePrice = (BasePriceTotal * FormSerie.SerieTransducerMultiplier);
                     RollerGrossTotal += PredisposizioneTrasduttorePrice;
                 }
-
-                //
 
                 //TipoStelo Ammortizzatori
                 if (FormTipoStelo.TipoSteloAmmortizzato == true)
@@ -683,8 +637,6 @@ namespace CMBListini.Controllers
                     AmmortizzatoriPrice = FormFissaggioPriceAmmortizzatori.FissaggioPrice * FormTipoStelo.TipoSteloNAmmortizzatori;
                     RollerGrossTotal += AmmortizzatoriPrice;
                 }
-
-                //
                 RollerGrossTotal += BasePriceTotal + FissaggioPrice;
                 ////OPZIONALI
                 ///
@@ -701,9 +653,7 @@ namespace CMBListini.Controllers
                         decimal CorsaTrasduttoreRemains = CorsaTrasduttore / FormTrasduttore.TrasduttorePriceRunSlice;
                         CorsaTrasduttoreRemains = Math.Ceiling(CorsaTrasduttoreRemains);
                         TrasduttorePrice += CorsaTrasduttoreRemains * FormTrasduttore.TrasduttorePriceAfterRun;
-
                     }
-
 
                     if (InputConnettoriTrasduttore == true)
                     {
@@ -712,7 +662,6 @@ namespace CMBListini.Controllers
 
                     RollerGrossTotal += TrasduttorePrice;
                     TransducerTotal = TrasduttorePrice;
-
                 }
 
                 //SensoreStaffa
@@ -736,10 +685,7 @@ namespace CMBListini.Controllers
                     {
                         return "Configurazione attiva non trovata per SensoreStaffa";
                     }
-
                 }
-
-
 
                 //Distanziali
                 DistanzialiPrice = FormBase.SpacerPrice * Distanziali;
@@ -764,7 +710,6 @@ namespace CMBListini.Controllers
                     }
                     else
                     {
-
                         SensoriInduttiviPrice = (((FormSensoriInduttivi.SensoriInduttiviPrice * FormSensoriInduttivi.SensoriInduttiviPriceMultiplier) * FormSensoriInduttivi.NSensori) + FormAmmortizzatore.FissaggioPrice * FormSensoriInduttivi.NAmm);
                     }
                 }
@@ -775,7 +720,6 @@ namespace CMBListini.Controllers
                     try
                     {
                         L6020_2Guarnizione FormGuarnizione = dbCtx.L6020_2Guarnizione.Where(x => x.GuarnizioneID == InputGuarnizione).First();
-
                         //L6020_2GuarnizionePriceCategory FormCategoryGuarn = dbCtx.L6020_2GuarnizionePriceCategory.Where(x => x.isStandard == true).First(); //da verificare se si prende cosi' il prezzo
                         if (FormGuarnizione.GuarnizioneMultiplier != 0)
                         {
@@ -827,9 +771,7 @@ namespace CMBListini.Controllers
                     catch (Exception e)
                     {
                         return "Controflange prezzo non trovato per Alesaggio immesso";
-
                     }
-
                 }
                 //
                 //SteloMonolitico
@@ -845,10 +787,8 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += SteloMonoliticoPrice;
                     }
-
                 }
 
-                //
                 //SoffiettoStelo
                 if (InputSoffiettoStelo != false)
                 {
@@ -864,25 +804,18 @@ namespace CMBListini.Controllers
                         {
                             RollerNetTotal += SoffiettoSteloPrice;
                         }
-
                     }
                     catch (Exception e)
                     {
                         return "Prezzo non trovato per la lunghezza Corsa in SoffiettoStelo";
-
                     }
-
                 }
 
-                //
                 //MaterialeStelo prendere sempre base standard A3
                 if (InputMaterialeSteloID != 0)
                 {
                     //prendo base standard
-
                     L6020_2MaterialeStelo FormMaterialeStelo = dbCtx.L6020_2MaterialeStelo.Where(x => x.MaterialeSteloID == InputMaterialeSteloID).First();
-
-
                     MaterialeSteloPrice = BasePriceTotalStd * FormMaterialeStelo.MaterialeSteloPriceMultiplier;
                     if (FormMaterialeStelo.onDiscount == true)
                     {
@@ -892,25 +825,16 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += MaterialeSteloPrice;
                     }
-
-
                 }
 
-
-                //
                 //MaterialeBoccola
                 if (InputMaterialeBoccola != 0)
                 {
                     //prendo base standard
-
                     L6020_2MaterialeBoccola FormMaterialeBoccola = dbCtx.L6020_2MaterialeBoccola.Where(x => x.MaterialeBoccolaID == InputMaterialeBoccola).First();
-
-
                     MaterialeBoccolaPrice = FormBaseStd.UntilRunPrice * FormMaterialeBoccola.MaterialeBoccolaMultiplier;
-
                     if (FormTipoStelo.TipoSteloPassante == true)
                     {
-
                         MaterialeBoccolaPrice *= FormMaterialeBoccola.MaterialeBoccolaStPMultiplier;
                     }
 
@@ -922,19 +846,15 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += MaterialeBoccolaPrice;
                     }
-
-
                 }
+
                 //SteloProlungato
                 if (InputSteloProlungato != 0)
                 {
                     L6020_2SteloProlungato FormSteloProlungato = dbCtx.L6020_2SteloProlungato.Where(x => x.SteloProlungatoStartLength < InputSteloProlungato && x.SteloProlungatoEndLength > InputSteloProlungato).First();
                     decimal SteloProlungatoSlicing = InputSteloProlungato / FormSteloProlungato.SteloProlungatoSlice;
                     SteloProlungatoSlicing = Math.Ceiling(SteloProlungatoSlicing);
-
-
                     SteloProlungatoPrice = (FormBaseStd.BeyondRunPrice * FormSteloProlungato.SteloProlungatoRunPriceMultiplier) * SteloProlungatoSlicing;
-
                     if (FormSteloProlungato.onDiscount == true)
                     {
                         AttachmentGrossTotal += SteloProlungatoPrice;
@@ -943,8 +863,6 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += SteloProlungatoPrice;
                     }
-
-
                 }
                 //Connessioni Olio
                 if (InputConnessioniOlioID != 0)
@@ -961,11 +879,7 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += ConnessioniOlioPrice;
                     }
-
                 }
-
-                //
-
 
                 //Drenaggio
                 if (InputDrenaggio != false)
@@ -974,7 +888,6 @@ namespace CMBListini.Controllers
                     //aggiungo prezzo kit guarnizioni con basso attrito
                     L6020_2Guarnizione FormDrenaggioGuarnizione = dbCtx.L6020_2Guarnizione.Where(x => x.GuarnizioneID == FormDrenaggio.DrenaggioGuarnizioniID).First();
                     L6020_2GuarnizionePrice FormDrenaggioGuarnizionePrice = dbCtx.L6020_2GuarnizionePrice.Where(x => x.GuarnizionePriceCategoryID == FormDrenaggioGuarnizione.GuarnizionePriceCategoryID && x.GuarnizionePriceAlesaggioLength == FormAlesaggio.AlesaggioLength && x.GuarnizionePriceSteloValue == FormStelo.SteloValue).First();
-                    //
                     DrenaggioPrice = (BaseRunStd * FormDrenaggio.DrenaggioPriceMultiplier) + FormDrenaggioGuarnizionePrice.GuarnizionePrice;
                     if (FormDrenaggio.onDiscount == true)
                     {
@@ -984,10 +897,7 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += DrenaggioPrice;
                     }
-
                 }
-
-                //
 
                 //SnodoNonMantenuto
                 if (InputSnodoNonMantenuto != false)
@@ -1009,14 +919,11 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += SnodoNonMantenutoPrice;
                     }
-
                 }
 
-                //
                 //DadiIncassati
                 if (InputDadiIncassati != false)
                 {
-
                     DadiIncassatiPrice = FormFissaggioPrice.FissaggioMagg;
                     if (FormFissaggioPrice.onDiscountMagg == true)
                     {
@@ -1026,10 +933,8 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += DadiIncassatiPrice;
                     }
-
                 }
 
-                //
                 //FilettaturaStelo
                 if (InputFilettaturaSteloID != 0)
                 {
@@ -1043,12 +948,7 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += FilettaturaSteloPrice;
                     }
-
-
-
                 }
-                //
-
 
                 //Minimess
                 if (InputMinimessID != 0)
@@ -1063,17 +963,13 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += MinimessPrice;
                     }
-
                 }
-
-                //
 
                 //ProtezioneSensore
                 if (InputProtezioneSensore != false && InputSensoriInduttivi != 0)
                 {
                     L6020_2ProtezioneSensore FormProtezioneSensore = dbCtx.L6020_2ProtezioneSensore.Where(x => x.inUse).First();
                     L6020_2SensoriInduttivi FormProtezioneSensoreInduttivi = dbCtx.L6020_2SensoriInduttivi.Where(x => x.SensoriInduttiviID == InputSensoriInduttivi).First();
-
                     ProtezioneSensorePrice = FormProtezioneSensore.ProtezioneSensorePrice * FormProtezioneSensoreInduttivi.NSensori;
                     if (FormProtezioneSensore.onDiscount == true)
                     {
@@ -1083,12 +979,7 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += ProtezioneSensorePrice;
                     }
-
                 }
-
-                //
-
-
 
                 //PiastraCetop
                 if (InputPiastraCetop != 0)
@@ -1103,9 +994,7 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += PiastraCetopPrice;
                     }
-
                 }
-                //
 
                 //ProtezioneTrasduttore
                 if (InputProtezioneTrasduttore == true)
@@ -1120,12 +1009,8 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += ProtezioneTrasduttorePrice;
                     }
-
                     TransducerTotal += ProtezioneTrasduttorePrice;
-
                 }
-
-                //
 
                 //Verniciatura
                 if (InputVerniciatura != 0)
@@ -1151,10 +1036,7 @@ namespace CMBListini.Controllers
                     {
                         RollerNetTotal += VerniciaturaPrice;
                     }
-
                 }
-
-
                 //OpzioniCilindro
                 if (InputOpzioniCilindro != 0)
                 {
@@ -1163,28 +1045,21 @@ namespace CMBListini.Controllers
                     if (FormOpzioniCilindro.OpzioniCilindroCategoryID == 1)
                     {
                         OpzioniCilindroPrice = (RollerGrossTotal - TrasduttorePrice) * FormOpzioniCilindro.OpzioniCilindroMultiplier;
-
                     }
-
                     if (FormOpzioniCilindro.OpzioniCilindroCategoryID == 2)
                     {
                         OpzioniCilindroPrice = (BasePriceTotal + DistanzialiPrice) * FormOpzioniCilindro.OpzioniCilindroMultiplier;
-
                     }
-
                     if (FormOpzioniCilindro.OpzioniCilindroCategoryID == 3)
                     {
                         OpzioniCilindroPrice = (BasePriceTotal + DistanzialiPrice + FissaggioPrice) * FormOpzioniCilindro.OpzioniCilindroMultiplier;
-
                     }
-
                     if (FormOpzioniCilindro.OpzioniCilindroCategoryID == 5)
                     {
                         string AcronymFissaggio = FormOpzioniCilindro.OpzioniCilindroVar;
                         L6020_2TipoFissaggio FormOpzioniCilindroFissaggio = dbCtx.L6020_2TipoFissaggio.Where(x => x.TipoFissaggioAcronym == AcronymFissaggio).First();
                         L6020_2FissaggioPrice FormOpzioniCilindroFissaggioPrice = dbCtx.L6020_2FissaggioPrice.Where(x => x.FissaggioPriceCategoryID == FormOpzioniCilindroFissaggio.FissaggioPriceCategoryID && x.FissaggioAlesaggioLength == FormAlesaggio.AlesaggioLength).First();
                         OpzioniCilindroPrice = FormOpzioniCilindroFissaggioPrice.FissaggioPrice;
-
                     }
 
                     if (FormOpzioniCilindro.onDiscount == true)
@@ -1196,10 +1071,6 @@ namespace CMBListini.Controllers
                         RollerNetTotal += OpzioniCilindroPrice;
                     }
                 }
-
-                //
-
-                //
 
                 //Accessori Stelo/Cilindro
                 if (InputAccessoriStelo != 0)
@@ -1214,9 +1085,7 @@ namespace CMBListini.Controllers
                     }
                     catch (Exception e)
                     {
-
                         return "Prezzo non trovato per configurazione in Accessori Stelo";
-
                     }
                 }
 
@@ -1233,15 +1102,8 @@ namespace CMBListini.Controllers
                     catch (Exception e)
                     {
                         return "Prezzo non trovato per configurazione in Accessori Cilindro";
-
                     }
                 }
-
-
-                //
-
-
-
             }
 
             //Fine Calcoli
@@ -1252,8 +1114,6 @@ namespace CMBListini.Controllers
             AttachmentGrossTotal += DistanzialiPrice + SfiatiAriaPrice + SensoriInduttiviPrice + GuarnizionePrice;
             //Totale Lordo
             GrossTotal = RollerGrossTotal + AttachmentGrossTotal;
-
-
             //Sconto
 
             if (InputDiscount != 0)
@@ -1268,8 +1128,6 @@ namespace CMBListini.Controllers
                 GrossTotal -= DiscountPlusValue;
             }
             //Fine Sconto
-
-
             //Totali Netti
             RollerNetTotal += FissaggioPriceNoDiscount;
             AttachmentNetTotal = RollerNetTotal + AttachmentGrossTotal;
@@ -1277,10 +1135,8 @@ namespace CMBListini.Controllers
             FinalTotal = GrossTotal + RollerNetTotal;
             //ExtraPrezzo
             FinalTotal += InputExtraPrezzo;
-            //
 
             string FinalString = (RollerGrossTotal).ToString("0.00") + "-" + AttachmentNetTotal.ToString("0.00") + "-" + GuarnizioneKitRicambioPrice.ToString("0.00") + "-" + TransducerTotal.ToString("0.00") + "-" + FinalTotal.ToString("0.00");
-
             return FinalString;
         }
 
@@ -1305,11 +1161,9 @@ namespace CMBListini.Controllers
                     foreach (L6020_2AccessoriCategory category in articleCategories)
                     {
                         //L6020_2Alesaggio[] articlesBySelectedCategory = dbCtx.L6020_2Alesaggio.Where(a =>  == category.ArticleCategoryID && a.InUse).ToArray();
-
                         articlesByCategory.Add(category.AccessoriCategoryID.ToString(), category.AccessoriCategoryDesc + " / " + category.AccessoriCategoryDesc2);
                     }
                 }
-
                 return Content(JsonConvert.SerializeObject(new { status = true, values = articlesByCategory }));
             }
 
@@ -1328,7 +1182,6 @@ namespace CMBListini.Controllers
             {
                 using (CMBContext dbCtx = new CMBContext())
                 {
-
                     Boolean XOption = false;
                     if (FilettaturaSteloID != "")
                     {
@@ -1336,19 +1189,15 @@ namespace CMBListini.Controllers
                         XOption = articleCFilettatura.XOption;
                     }
                     var articleCategories = dbCtx.L6020_2AccessoriCategory.Where(c => c.XOption == XOption && c.AccessoriGroupID == 2 && c.isActive == true).OrderBy(c => c.AccessoriCategoryCode).ToArray();
-
                     //Extract all articles matching a specific category
                     foreach (L6020_2AccessoriCategory category in articleCategories)
                     {
                         //L6020_2Alesaggio[] articlesBySelectedCategory = dbCtx.L6020_2Alesaggio.Where(a =>  == category.ArticleCategoryID && a.InUse).ToArray();
-
                         articlesByCategory.Add(category.AccessoriCategoryID.ToString(), category.AccessoriCategoryDesc + " / " + category.AccessoriCategoryDesc2);
                     }
                 }
-
                 return Content(JsonConvert.SerializeObject(new { status = true, values = articlesByCategory }));
             }
-
             catch (Exception ex)
             {
                 return Content(JsonConvert.SerializeObject(new { status = false, message = ex.Message }));
@@ -1359,7 +1208,6 @@ namespace CMBListini.Controllers
         public Boolean TransductorActivation(string SerieID)
         {
             Boolean Activation = false;
-
             if (SerieID != "")
             {
                 using (CMBContext dbCtx = new CMBContext())
@@ -1378,7 +1226,6 @@ namespace CMBListini.Controllers
         public int ActivateSfiati(string SerieID)
         {
             int Activation = 0;
-
             if (SerieID != "")
             {
                 using (CMBContext dbCtx = new CMBContext())
@@ -1392,7 +1239,6 @@ namespace CMBListini.Controllers
                 }
             }
             return Activation;
-
         }
 
         //Magneti 
@@ -1401,7 +1247,6 @@ namespace CMBListini.Controllers
         public Boolean MagnetsActivation(string SerieID)
         {
             Boolean Activation = false;
-
             if (SerieID != "")
             {
                 using (CMBContext dbCtx = new CMBContext())
@@ -1415,8 +1260,6 @@ namespace CMBListini.Controllers
             }
             return Activation;
         }
-
-        //
 
         [HttpPost]
         public string CreateSendEmail(ViewModelL6020_2 FormData)
@@ -1433,7 +1276,6 @@ namespace CMBListini.Controllers
 
             if (UserEmail == "-" || UserEmail == "")
             {
-
                 return "<strong>Uh-Oh!</strong> Email dell'utente non trovata";
             }
 
@@ -1455,8 +1297,6 @@ namespace CMBListini.Controllers
 
             SmtpServer.Send(mail);
             return "<strong>Successo!</strong> Invio completato!";
-
-
         }
         public FileContentResult ExportCSV(ViewModelL6020_2 FormData)
         {
@@ -1471,11 +1311,9 @@ namespace CMBListini.Controllers
             int InputTrasduttoreID = Int32.Parse(FormData.InputTrasduttoreID ?? "0");
             Boolean InputConnettoriTrasduttore = FormData.InputConnettoriTrasduttore;
             Boolean InputProtezioneTrasduttore = FormData.InputProtezioneTrasduttore;
-            //
+
             //SensoreStaffa
             int InputSensoreStaffa = FormData.InputMA3GA3;
-            //
-
 
             //Distanziali
             int InputDistanziali = Int32.Parse(FormData.InputDistanziali ?? "0");
@@ -1513,7 +1351,6 @@ namespace CMBListini.Controllers
             //Verniciatura
             int InputVerniciatura = Int32.Parse(FormData.InputVerniciaturaID ?? "0");
 
-
             //Controflange
             Boolean InputControFlangia = FormData.InputControflangia;
 
@@ -1535,7 +1372,6 @@ namespace CMBListini.Controllers
             //Protezione Sensore
             Boolean InputProtezioneSensore = FormData.InputProtezioneSensore;
 
-
             //Accessori Stelo
             int InputAccessoriStelo = Int32.Parse(FormData.InputAccessoriSteloID ?? "0");
 
@@ -1545,7 +1381,6 @@ namespace CMBListini.Controllers
             //Connessioni Olio
             int InputConnessioniOlio = Int32.Parse(FormData.InputConnessioniOlio ?? "0");
 
-
             using (CMBContext dbCtx = new CMBContext())
             {
                 //L6020_Ser quotation = dbCtx.Quotations.Where(x => x.QuotationID == quotationID).First();
@@ -1553,7 +1388,6 @@ namespace CMBListini.Controllers
                 L6020_2Stelo FormStelo = dbCtx.L6020_2Stelo.Where(x => x.SteloID == InputSteloID).First();
                 L6020_2TipoStelo FormTipoStelo = dbCtx.L6020_2TipoStelo.Where(x => x.TipoSteloID == InputTipoSteloID).First();
                 L6020_2Serie FormSerie = dbCtx.L6020_2Serie.Where(x => x.SerieID == FormData.InputSerieID).First();
-
                 L6020_2TipoFissaggio FormTipoFissaggio = dbCtx.L6020_2TipoFissaggio.Where(x => x.TipoFissaggioID == InputTipoFissaggioID).First();
                 L6020_2FissaggioPrice FormFissaggioPrice = dbCtx.L6020_2FissaggioPrice.Where(x => x.FissaggioPriceCategoryID == FormTipoFissaggio.FissaggioPriceCategoryID && x.FissaggioAlesaggioLength == FormAlesaggio.AlesaggioLength).First();
 
@@ -1573,13 +1407,8 @@ namespace CMBListini.Controllers
                 sb.AppendLine("Corsa;=\"" + Int32.Parse(FormData.InputCorsa) + "\"");
                 sb.AppendLine("TipoStelo;" + FormTipoStelo.TipoSteloAcronym);
                 sb.AppendLine("TipoFissaggio;=\"" + FormTipoFissaggio.TipoFissaggioAcronym + "\"");
-
-
-
                 sb.AppendLine($"");
 
-
-                //
                 //Opzionali
 
                 //Sfiati Aria
@@ -1721,11 +1550,7 @@ namespace CMBListini.Controllers
                 if (InputSensoreStaffa != 0)
                 {
                     sb.AppendLine("Sensore Staffa;=\"" + InputSensoreStaffa + "\"");
-
                 }
-
-                //
-
                 sb.AppendLine($"");
 
                 //Accessori Stelo
@@ -1742,10 +1567,6 @@ namespace CMBListini.Controllers
                     sb.Append("AccessoriCilindro;" + FormAccessoriCilindro.AccessoriCategoryCode + ";" + FormAccessoriCilindro.AccessoriCategoryDesc);
                 }
 
-
-
-                //
-
                 sb.AppendLine($"");
                 sb.AppendLine($"");
                 sb.AppendLine("Totali;");
@@ -1757,21 +1578,9 @@ namespace CMBListini.Controllers
                 }
                 sb.AppendLine("Totale Finale;" + FormData.FinalTotal);
                 sb.AppendLine("Kit Guarnizioni ricambio;" + FormData.GuarnizioniKitTotal);
-
-
-
-
                 string filename = FormData.InputCode.Replace("/", "_") + ".csv";
                 return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", filename);
             }
         }
-
-
-
-
     }
-
-
-
-
 }

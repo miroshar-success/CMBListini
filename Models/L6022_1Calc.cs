@@ -14,12 +14,12 @@ namespace CMBListini.Models
         public int CalcID { get; set; }
         public String SerieID { get; set; }
 
-        public ViewModel6022_1 ToViewModel(int Discount, int DiscountPlus)
+        public ViewModelL6022_1 ToViewModel(int Discount, int DiscountPlus, bool cusomDiscountEnable, bool cusomDiscountMod, int customDiscount, int customDiscountExtra)
         {
             using (CMBContext2 dbCtx = new CMBContext2())
             {
 
-                ViewModel6022_1 vm6022_1 = new ViewModel6022_1();
+                ViewModelL6022_1 vm6022_1 = new ViewModelL6022_1();
 
                 var SerieTipi = dbCtx.L6022_1Serie.Where(x => x.SerieisActive).ToList().Select(x => new { Value = x.SerieID, Text = x.SerieID + " - " + x.SerieDesc }).ToList();
                 var AlesaggioTipi = dbCtx.L6022_1Alesaggio.Where(x => x.AlesaggioisActive).ToList().Select(x => new { Value = x.AlesaggioID, Text = x.AlesaggioLength }).ToList();
@@ -85,8 +85,10 @@ namespace CMBListini.Models
                 vm6022_1.InputDiscountPlus = DiscountPlus.ToString();
                 //
 
-
-
+                vm6022_1.CustomDiscountEnable = cusomDiscountEnable;
+                vm6022_1.CustomDiscountMod = cusomDiscountMod;
+                vm6022_1.CustomDiscount = customDiscount;
+                vm6022_1.CustomExtraDiscount = customDiscountExtra;
 
                 return vm6022_1;
             }

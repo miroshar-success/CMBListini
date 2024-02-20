@@ -29,28 +29,20 @@
 <div class="ContainerButton">
     @{ string username = ViewBag.Username;
 
-                    using (CMBContext db = new CMBContext())
-                    {
-
-                        var ListInit = db.vwUserListingIntro.Where(u => u.UserID == username);
-                        foreach (vwUserListingIntro Listino in ListInit)
-                        {
-                            if (Listino.isActive == true)
-                            {
-
-                 <a href="@Listino.LandingPage/Index" class="btn btn-lg btn-primary custom">@Listino.PriceListDesc</a>
-
-            }
+        using (CMBContext db = new CMBContext())
+        {
+            var ListInit = db.vwUserListingIntro.Where(u => u.UserID == username);
+            foreach (vwUserListingIntro Listino in ListInit)
+            {
+                if (Listino.isActive == true)
+                {
+                    <a href="@Listino.LandingPage/Index" class="btn btn-lg btn-primary custom">@Listino.PriceListDesc</a>
+                }
                 else
                 {
-                   
-                 <a href="#" type="button" class="btn btn-lg btn-secondary custom" disabled>@Listino.PriceListDesc</a>
-
-        }
-
+                    <a href="#" type="button" class="btn btn-lg btn-secondary custom" disabled>@Listino.PriceListDesc</a>
+                }
             }
-
-
         }
     }
 

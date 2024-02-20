@@ -14,7 +14,7 @@ namespace CMBListini.Models
         public int CalcID { get; set; }
         public String SerieID { get; set; }
 
-        public ViewModelL6020_2 ToViewModel(int Discount, int DiscountPlus)
+        public ViewModelL6020_2 ToViewModel(int Discount, int DiscountPlus, bool cusomDiscountEnable, bool cusomDiscountMod, int customDiscount, int customDiscountExtra)
         {
             using (CMBContext dbCtx = new CMBContext())
             {
@@ -38,16 +38,13 @@ namespace CMBListini.Models
                 var PiastraCetopTipi = dbCtx.L6020_2PiastraCetopCategory.Where(x => x.isActive).ToList().Select(x => new { Value = x.PiastraCetopCategoryID, Text = x.PiastraCetopCategoryDesc }).ToList();
                 var OpzioniCilindroTipi = dbCtx.L6020_2OpzioniCilindro.Where(x => x.isActive).ToList().Select(x => new { Value = x.OpzioniCilindroID, Text = x.OpzioniCilindroDesc }).ToList();
                 var ConnessioniOlioTipi = dbCtx.L6020_2ConnessioniOlio.Where(x => x.isActive).ToList().Select(x => new { Value = x.ConnessioniOlioID, Text = x.ConnessioniOlioDesc }).ToList();
-                //
 
                 //Aggiunte "z"
                 var MaterialeStelo = dbCtx.L6020_2MaterialeStelo.Where(x => x.isActive).ToList().Select(x => new { Value = x.MaterialeSteloID, Text = x.MaterialeSteloDesc }).ToList();
-                //
 
                 //Accessori
                 var AccessoriStelo = dbCtx.L6020_2AccessoriCategory.Where(x => x.isActive && x.AccessoriGroupID == 1 && x.XOption == false).OrderBy(x => x.AccessoriCategoryCode).ToList().Select(x => new { Value = x.AccessoriCategoryID, Text = x.AccessoriCategoryCode + " - " + x.AccessoriCategoryDesc + " " + x.AccessoriCategoryDesc2 }).ToList();
                 var AccessoriCilindro = dbCtx.L6020_2AccessoriCategory.Where(x => x.isActive && x.AccessoriGroupID == 2 && x.XOption == false).OrderBy(x => x.AccessoriCategoryCode).ToList().Select(x => new { Value = x.AccessoriCategoryID, Text = x.AccessoriCategoryCode + " - " + x.AccessoriCategoryDesc + " " + x.AccessoriCategoryDesc2 }).ToList();
-                //
 
                 vm6020_2.ListSerie = new SelectList(SerieTipi, "Value", "Text", vm6020_2.InputSerieID);
                 vm6020_2.ListAlesaggio = new SelectList("");
@@ -67,26 +64,22 @@ namespace CMBListini.Models
                 vm6020_2.ListPiastraCetop = new SelectList(PiastraCetopTipi, "Value", "Text", vm6020_2.InputPiastraCetopID);
                 vm6020_2.ListOpzioniCilindro = new SelectList(OpzioniCilindroTipi, "Value", "Text", vm6020_2.InputOpzioniCilindroID);
 
-                //
                 //Aggiunte "z"
                 vm6020_2.ListMaterialeStelo = new SelectList(MaterialeStelo, "Value", "Text", vm6020_2.InputMaterialeSteloID);
                 vm6020_2.ListConnessioniOlio = new SelectList(ConnessioniOlioTipi, "Value", "Text", vm6020_2.InputConnessioniOlio);
-
-                //
 
                 //Accessori
                 vm6020_2.ListAccessoriStelo = new SelectList(AccessoriStelo, "Value", "Text", vm6020_2.InputAccessoriSteloID);
                 vm6020_2.ListAccessoriCilindro = new SelectList(AccessoriCilindro, "Value", "Text", vm6020_2.InputAccessoriCilindroID);
 
-                //
-
                 //Discount
                 vm6020_2.InputDiscount = Discount.ToString();
                 vm6020_2.InputDiscountPlus = DiscountPlus.ToString();
-                //
 
-
-
+                vm6020_2.CustomDiscountEnable = cusomDiscountEnable;
+                vm6020_2.CustomDiscountMod = cusomDiscountMod;
+                vm6020_2.CustomDiscount = customDiscount;
+                vm6020_2.CustomExtraDiscount = customDiscountExtra;
 
                 return vm6020_2;
             }

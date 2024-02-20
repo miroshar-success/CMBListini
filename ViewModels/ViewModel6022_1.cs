@@ -7,8 +7,10 @@ using System.Web.Mvc;
 
 namespace CMBListini.ViewModels
 {
-    public class ViewModel6022_1
+    public class ViewModelL6022_1
     {
+        // gestione campo per inserimento manuale del codice
+        public string CodiceDigitato { get; set; }
 
         //Organization
         public Organization OrganizationData { get; set; }
@@ -25,6 +27,11 @@ namespace CMBListini.ViewModels
         [DisplayName("Extra Sconto")]
         [Range(0, 100)]
         public string InputDiscountPlus { get; set; }
+
+        public bool CustomDiscountEnable { get; set; }
+        public bool CustomDiscountMod { get; set; }
+        public int CustomDiscount { get; set; }
+        public int CustomExtraDiscount { get; set; }
         //
 
         //MaggiorazioneTotale
@@ -161,6 +168,9 @@ namespace CMBListini.ViewModels
         [DisplayName("Accessori Cilindro")]
         public string InputAccessoriCilindroID { get; set; }
 
+ 
+        [Display(Name = "Codiceimmesso")]
+        public string Codiceimmesso { get; set; }
 
         public SelectList ListSerie { get; set; }
         public SelectList ListAlesaggio { get; set; }
@@ -194,6 +204,8 @@ namespace CMBListini.ViewModels
         //
 
         //Totali
+
+        //public string InputCorsa { get; set; }
         public decimal CilindroTotal { get; set; }
         public decimal OpzioniTotal { get; set; }
         public decimal TrasduttoreTotal { get; set; }
