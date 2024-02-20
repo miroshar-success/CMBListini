@@ -83,7 +83,6 @@ namespace CMBListini.Models
             {
                 return Content(JsonConvert.SerializeObject(new { status = false, message = "Dati non validi" }));
             }
-
             else
             {
                 try
@@ -91,8 +90,8 @@ namespace CMBListini.Models
                     //Lookup for user into DB
                     using (CMBContext db = new CMBContext())
                     {
-                        // string pwdSHA256Hash = CalculateSHA256(Password);
-                        User usr = db.Users.Where(u => u.UserID == Username/* && u.PasswordHash == pwdSHA256Hash*/).FirstOrDefault();
+                        string pwdSHA256Hash = CalculateSHA256(Password);
+                        User usr = db.Users.Where(u => u.UserID == Username && u.PasswordHash == pwdSHA256Hash).FirstOrDefault();
                         //Organization org = db.Organizations.Where(t => t.OrganizationID == usr.OrganizationID).FirstOrDefault();
                         //User ok
                         if (usr != null)

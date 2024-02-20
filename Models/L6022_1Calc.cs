@@ -45,7 +45,7 @@ namespace CMBListini.Models
                 //
 
                 //Accessori
-                var AccessoriStelo = dbCtx.L6022_1AccessoriCategory.Where(x => x.isActive && x.AccessoriGroupID == 1 && x.XOption == false).OrderBy(x => x.AccessoriCategoryCode).ToList().Select(x => new { Value = x.AccessoriCategoryID, Text = x.AccessoriCategoryCode + " - " + x.AccessoriCategoryDesc + " " + x.AccessoriCategoryDesc2 }).ToList();
+                var AccessoriStelo = dbCtx.L6022_1AccessoriCategory.Where(x => x.isActive && x.AccessoriGroupID == 1 && x.XOption == false).OrderBy(x => x.AccessoriCategoryCode).ToList().Select(x => new { Value = x.AccessoriCategoryID, Text = x.AccessoriCategoryDesc + " " + x.AccessoriCategoryDesc2 }).ToList();
                 var AccessoriCilindro = dbCtx.L6022_1AccessoriCategory.Where(x => x.isActive && x.AccessoriGroupID == 2 && x.XOption == false).OrderBy(x => x.AccessoriCategoryCode).ToList().Select(x => new { Value = x.AccessoriCategoryID, Text = x.AccessoriCategoryCode + " - " + x.AccessoriCategoryDesc + " " + x.AccessoriCategoryDesc2 }).ToList();
                 //
 
